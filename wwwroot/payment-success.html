@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanh toán thành công — CV Builder Pro</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    body { background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card-wrap { background: #fff; border-radius: 16px; padding: 48px 40px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,.08); }
+    .icon-circle { width: 80px; height: 80px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 2.2rem; color: #16a34a; }
+    .icon-circle.error { background: #fee2e2; color: #dc2626; }
+    .icon-circle.loading { background: #dbeafe; color: #2563eb; }
+    h2 { font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    p { color: #64748b; }
+    .btn-home { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 600; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; }
+    .btn-home:hover { background: #1e40af; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="card-wrap" id="card">
+    <!-- Loading state -->
+    <div id="stateLoading">
+      <div class="icon-circle loading">
+        <span class="spinner-border" style="width:2rem;height:2rem;border-width:3px"></span>
+      </div>
+      <h2>Đang xác minh…</h2>
+      <p>Vui lòng chờ trong giây lát.</p>
+    </div>
+
+    <!-- Success state -->
+    <div id="stateSuccess" style="display:none">
+      <div class="icon-circle"><i class="bi bi-check-circle-fill"></i></div>
+      <h2>Thanh toán thành công!</h2>
+      <p>Chúc mừng! Tài khoản của bạn đã được nâng cấp lên <strong>Premium</strong>.<br>Tất cả tính năng Pro đã được mở khoá.</p>
+      <a href="/" class="btn-home"><i class="bi bi-stars me-2"></i>Bắt đầu tạo CV</a>
+    </div>
+
+    <!-- Error state -->
+    <div id="stateError" style="display:none">
+      <div class="icon-circle error"><i class="bi bi-x-circle-fill"></i></div>
+      <h2>Xác minh thất bại</h2>
+      <p id="errorMsg">Không tìm thấy thông tin thanh toán. Vui lòng liên hệ hỗ trợ.</p>
+      <a href="/" class="btn-home" style="background:#dc2626">Quay về trang chủ</a>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const orderCode = params.get('orderCode');
+      const status    = params.get('status');   // PayOS also sends this in the URL
+
+      // PayOS redirects with status=PAID in the URL — use as fast path
+      if (status === 'PAID' && orderCode) {
+        // Verify server-side before granting premium
+        try {
+          const res  = await fetch(`/api/payment/verify?orderCode=${orderCode}`);
+          const data = await res.json();
+          if (data.paid) {
+            activatePremium();
+            return;
+          }
+        } catch (_) {}
+      }
+
+      // Fallback: check status regardless of URL param
+      if (orderCode) {
+        try {
+          const res  = await fetch(`/api/payment/verify?orderCode=${orderCode}`);
+          const data = await res.json();
+          if (data.paid) { activatePremium(); return; }
+          showError(`Trạng thái đơn hàng: ${data.status ?? 'không xác định'}`);
+        } catch (e) {
+          showError('Lỗi kết nối máy chủ. Vui lòng thử lại.');
+        }
+      } else {
+        showError('Không tìm thấy mã đơn hàng trong URL.');
+      }
+    })();
+
+    function activatePremium() {
+      localStorage.setItem('cvbPremium_v1', '1');
+      document.getElementById('stateLoading').style.display = 'none';
+      document.getElementById('stateSuccess').style.display = '';
+    }
+
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('stateLoading').style.display = 'none';
+      document.getElementById('stateError').style.display = '';
+    }
+  </script>
+</body>
+</html>

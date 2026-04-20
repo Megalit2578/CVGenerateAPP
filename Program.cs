@@ -11,6 +11,9 @@ builder.Services.AddControllers();
 // Register the PDF service as a singleton (stateless helper)
 builder.Services.AddSingleton<PdfService>();
 
+// Register PayOS payment service
+builder.Services.AddSingleton<PayOSService>();
+
 var app = builder.Build();
 
 // Serve index.html and static assets from wwwroot/

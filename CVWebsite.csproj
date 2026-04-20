@@ -10,6 +10,8 @@
   <ItemGroup>
     <!-- QuestPDF: modern fluent PDF generation library (Community license is free) -->
     <PackageReference Include="QuestPDF" Version="2024.10.4" />
+    <!-- PayOS: Vietnamese payment gateway SDK -->
+    <PackageReference Include="Net.payOS" Version="1.0.4" />
   </ItemGroup>
 
 </Project>

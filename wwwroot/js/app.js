@@ -621,39 +621,47 @@ function showStep1() {
   document.getElementById('pmStep3').style.display = 'none';
 }
 
-function showPaymentForm(plan, price) {
-  document.getElementById('pmPlanTitle').textContent = `Subscribe to ${plan} — ${price}/mo`;
+// plan = 'pro' | 'business', priceLabel = '29.000₫'
+let _currentPlan = 'pro';
+
+function showPaymentForm(plan, priceLabel) {
+  _currentPlan = plan;
+  const names = { pro: 'Pro', business: 'Business' };
+  document.getElementById('pmPlanTitle').textContent = `Nâng cấp lên ${names[plan] ?? plan}`;
+  document.getElementById('pmPlanPrice').textContent = `${priceLabel} — thanh toán một lần`;
   document.getElementById('pmStep1').style.display = 'none';
   document.getElementById('pmStep2').style.display = '';
   document.getElementById('pmStep3').style.display = 'none';
-  // Clear previous card input
-  ['pmCardName','pmCardNum','pmExpiry','pmCvv'].forEach(id =>
-    (document.getElementById(id).value = ''));
+  document.getElementById('pmPayError').style.display = 'none';
 }
 
-function simulatePay() {
-  const num  = document.getElementById('pmCardNum').value.replace(/\s/g,'');
-  const exp  = document.getElementById('pmExpiry').value;
-  const cvv  = document.getElementById('pmCvv').value;
-  if (num.length < 16 || exp.length < 5 || cvv.length < 3) {
-    alert('Please fill in all card details.');
-    return;
+async function startPayOSPayment() {
+  const btn = document.getElementById('pmPayBtn');
+  const errEl = document.getElementById('pmPayError');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo đơn hàng…`;
+
+  try {
+    const res = await fetch('/api/payment/create-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: _currentPlan }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.checkoutUrl) {
+      throw new Error(data.error ?? 'Không thể tạo đơn hàng. Vui lòng thử lại.');
+    }
+
+    // Redirect to PayOS checkout page
+    window.location.href = data.checkoutUrl;
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = `<i class="bi bi-box-arrow-up-right me-2"></i>Thanh toán qua PayOS`;
   }
-  // Simulate a 1.5 s network call
-  setBusyModal(true);
-  setTimeout(() => {
-    setBusyModal(false);
-    document.getElementById('pmStep2').style.display = 'none';
-    document.getElementById('pmStep3').style.display = '';
-  }, 1500);
-}
-
-function setBusyModal(busy) {
-  const btn = document.querySelector('#pmStep2 .btn-generate-action');
-  btn.disabled = busy;
-  btn.innerHTML = busy
-    ? `<span class="spinner-border spinner-border-sm me-2"></span>Processing…`
-    : `<i class="bi bi-lock-fill me-2"></i>Pay Now`;
 }
 
 function activatePremium() {
@@ -674,17 +682,6 @@ function activatePremium() {
   showStatus('🎉 Premium activated! Unlimited exports, no watermark, all templates unlocked.', 'success');
 }
 
-// Card number formatter (adds spaces: 4242 4242 4242 4242)
-function formatCardNum(input) {
-  let v = input.value.replace(/\D/g,'').slice(0,16);
-  input.value = v.match(/.{1,4}/g)?.join(' ') ?? v;
-}
-// Expiry formatter (MM/YY)
-function formatExpiry(input) {
-  let v = input.value.replace(/\D/g,'').slice(0,4);
-  if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
-  input.value = v;
-}
 
 // ════════════════════════════════════════════════════════════════════════════
 //  UTILITIES
