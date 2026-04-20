@@ -635,32 +635,50 @@ function showPaymentForm(plan, priceLabel) {
   document.getElementById('pmPayError').style.display = 'none';
 }
 
+// ── Reset the pay button to its idle state ───────────────────────────────────
+function resetPayBtn() {
+  const btn   = document.getElementById('pmPayBtn');
+  const errEl = document.getElementById('pmPayError');
+  if (btn) {
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-up-right me-2"></i>Thanh toán qua PayOS';
+  }
+  if (errEl) errEl.style.display = 'none';
+}
+
+// When user navigates BACK from PayOS (browser back-button), the browser
+// restores the page from bfcache — button is still spinning.  pageshow fires
+// with event.persisted = true in that case, so we reset the button.
+window.addEventListener('pageshow', event => {
+  if (event.persisted) resetPayBtn();
+});
+
 async function startPayOSPayment() {
-  const btn = document.getElementById('pmPayBtn');
+  const btn   = document.getElementById('pmPayBtn');
   const errEl = document.getElementById('pmPayError');
   errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo đơn hàng…`;
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo đơn hàng…';
 
   try {
-    const res = await fetch('/api/payment/create-link', {
-      method: 'POST',
+    const res  = await fetch('/api/payment/create-link', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: _currentPlan }),
+      body:    JSON.stringify({ plan: _currentPlan }),
     });
     const data = await res.json();
 
-    if (!res.ok || !data.checkoutUrl) {
+    if (!res.ok || !data.checkoutUrl)
       throw new Error(data.error ?? 'Không thể tạo đơn hàng. Vui lòng thử lại.');
-    }
 
-    // Redirect to PayOS checkout page
+    // Redirect to PayOS — after this, bfcache may restore the page on Back.
+    // The pageshow listener above will reset the button when that happens.
     window.location.href = data.checkoutUrl;
+
   } catch (err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.innerHTML = `<i class="bi bi-box-arrow-up-right me-2"></i>Thanh toán qua PayOS`;
+    resetPayBtn();
   }
 }
 
