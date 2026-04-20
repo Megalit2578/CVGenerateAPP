@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CV Builder Pro — Professional Resume Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="/css/style.css" rel="stylesheet" />
+  <!-- AdSense config — chỉnh sửa file này để bật ads thật -->
+  <script src="/js/adsense-config.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TOP NAVIGATION
+═══════════════════════════════════════════════════════════════════ -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <i class="bi bi-file-earmark-person-fill"></i>
+      CV Builder <span class="brand-pro">Pro</span>
+    </div>
+    <div class="nav-center d-none d-md-flex gap-3 align-items-center">
+      <!-- Export counter — updated by JS -->
+      <span id="exportCounter" class="counter-badge">3 exports left today</span>
+    </div>
+    <button class="btn-premium-nav" onclick="openPremiumModal()">
+      <i class="bi bi-stars me-1"></i>Upgrade to Premium
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AD BANNER — TOP LEADERBOARD 728×90
+     HOW TO ACTIVATE GOOGLE ADSENSE:
+       1. Go to https://adsense.google.com → Get Started
+       2. Add your site URL, wait for approval (1-2 weeks)
+       3. Create ad unit: Display Ad → Leaderboard 728×90
+       4. Replace the .ad-demo-728 div below with:
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js
+            ?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+          <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px"
+            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+═══════════════════════════════════════════════════════════════════ -->
+<div class="ad-banner-top" id="adTop">
+  <div class="ad-demo-728" id="adSlotTop">
+    <span class="ad-pill">Ad</span>
+    <div class="ad-content">
+      <i class="bi bi-briefcase-fill ad-icon"></i>
+      <div class="ad-text">
+        <strong>Ready for your next career move?</strong>
+        <span>TopCV.com — Professional CV writing by expert writers · From $99</span>
+      </div>
+    </div>
+    <a class="ad-cta-btn" href="#" onclick="return false">Get Started →</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN APP LAYOUT
+═══════════════════════════════════════════════════════════════════ -->
+<div class="app-layout">
+
+  <!-- ── LEFT: Form panel ───────────────────────────────────────── -->
+  <div class="form-panel" id="formPanel">
+    <form id="cvForm" novalidate autocomplete="off">
+
+      <!-- ╔══════════ PERSONAL INFO ══════════╗ -->
+      <div class="form-section">
+        <div class="section-head">
+          <i class="bi bi-person-badge-fill"></i>Personal Information
+        </div>
+        <div class="section-body">
+
+          <!-- Photo upload -->
+          <div class="photo-upload-area" id="photoDropzone" onclick="document.getElementById('photoInput').click()" ondragover="event.preventDefault()" ondrop="handlePhotoDrop(event)">
+            <img id="photoPreviewImg" src="" alt="" style="display:none" />
+            <div id="photoPlaceholder">
+              <i class="bi bi-person-circle"></i>
+              <span>Click or drag to upload photo</span>
+              <small>JPG, PNG · max 2MB</small>
+            </div>
+            <button type="button" id="photoRemoveBtn" style="display:none" onclick="removePhoto(event)">
+              <i class="bi bi-x-circle-fill"></i>
+            </button>
+          </div>
+          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handlePhotoSelect(this)" />
+
+          <div class="row g-3 mt-1">
+            <div class="col-12">
+              <label class="flabel">Full Name <span class="req">*</span></label>
+              <input type="text" id="fullName" class="form-control" placeholder="e.g. John Smith" required />
+            </div>
+            <div class="col-md-6">
+              <label class="flabel">Email Address</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-envelope"></i>
+                <input type="email" id="email" class="form-control has-icon" placeholder="john@example.com" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="flabel">Phone Number</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-telephone"></i>
+                <input type="tel" id="phone" class="form-control has-icon" placeholder="+1 234 567 890" />
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="flabel">Address / Location</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-geo-alt"></i>
+                <input type="text" id="address" class="form-control has-icon" placeholder="City, Country" />
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="flabel">Profile Summary</label>
+              <textarea id="summary" class="form-control" rows="3"
+                placeholder="A concise overview of your professional background and career goals..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔══════════ EDUCATION ══════════╗ -->
+      <div class="form-section">
+        <div class="section-head">
+          <i class="bi bi-mortarboard-fill"></i>Education
+          <button type="button" class="btn-add-entry" onclick="addEducation()">
+            <i class="bi bi-plus-lg"></i>Add
+          </button>
+        </div>
+        <div class="section-body" id="educationContainer"></div>
+      </div>
+
+      <!-- ╔══════════ SKILLS ══════════╗ -->
+      <div class="form-section">
+        <div class="section-head">
+          <i class="bi bi-lightning-charge-fill"></i>Skills
+          <button type="button" class="btn-add-entry" onclick="addSkill()">
+            <i class="bi bi-plus-lg"></i>Add
+          </button>
+        </div>
+        <div class="section-body" id="skillsContainer"></div>
+      </div>
+
+      <!-- ╔══════════ WORK EXPERIENCE ══════════╗ -->
+      <div class="form-section">
+        <div class="section-head">
+          <i class="bi bi-briefcase-fill"></i>Work Experience
+          <button type="button" class="btn-add-entry" onclick="addExperience()">
+            <i class="bi bi-plus-lg"></i>Add
+          </button>
+        </div>
+        <div class="section-body" id="experienceContainer"></div>
+      </div>
+
+      <!-- ╔══════════ ACTIONS ══════════╗ -->
+      <div class="form-actions">
+        <button type="button" class="btn-preview-action" onclick="triggerPreview()">
+          <i class="bi bi-eye-fill me-2"></i>Refresh Preview
+        </button>
+        <button type="submit" class="btn-generate-action" id="generateBtn">
+          <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Download PDF
+        </button>
+      </div>
+      <div id="statusMsg" class="status-msg" style="display:none;"></div>
+
+    </form>
+  </div><!-- /form-panel -->
+
+  <!-- ── RIGHT: Preview panel ───────────────────────────────────── -->
+  <div class="preview-panel">
+    <div class="preview-sticky">
+
+      <!-- Template selector -->
+      <div class="selector-block">
+        <div class="selector-label"><i class="bi bi-layout-text-sidebar me-1"></i>Template</div>
+        <div class="template-grid">
+
+          <label class="tpl-card" data-template="modern">
+            <input type="radio" name="template" value="modern" checked hidden />
+            <div class="tpl-thumb modern-thumb">
+              <div class="t-sidebar"></div>
+              <div class="t-main">
+                <div class="t-line long"></div><div class="t-line med"></div>
+                <div class="t-line short"></div><div class="t-line long"></div>
+              </div>
+            </div>
+            <span>Modern</span>
+            <div class="tpl-badge free">FREE</div>
+          </label>
+
+          <label class="tpl-card" data-template="classic">
+            <input type="radio" name="template" value="classic" hidden />
+            <div class="tpl-thumb classic-thumb">
+              <div class="t-header-bar"></div>
+              <div class="t-body">
+                <div class="t-line long"></div><div class="t-line med"></div>
+                <div class="t-line short"></div><div class="t-line long"></div>
+              </div>
+            </div>
+            <span>Classic</span>
+            <div class="tpl-badge free">FREE</div>
+          </label>
+
+          <!-- Premium locked template -->
+          <div class="tpl-card locked" onclick="openPremiumModal()">
+            <div class="tpl-thumb exec-thumb">
+              <div class="t-exec-top"></div>
+              <div class="t-body">
+                <div class="t-line long"></div><div class="t-line med"></div>
+                <div class="t-line short"></div>
+              </div>
+            </div>
+            <span>Executive</span>
+            <div class="tpl-badge premium"><i class="bi bi-lock-fill me-1"></i>PRO</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Colour theme selector -->
+      <div class="selector-block">
+        <div class="selector-label"><i class="bi bi-palette me-1"></i>Colour Theme</div>
+        <div class="theme-dots">
+          <button class="tdot active" data-theme="blue"    title="Blue"    style="background:#1d4ed8"></button>
+          <button class="tdot"        data-theme="dark"    title="Dark"    style="background:#0f172a"></button>
+          <button class="tdot"        data-theme="purple"  title="Purple"  style="background:#7c3aed"></button>
+          <button class="tdot"        data-theme="emerald" title="Emerald" style="background:#059669"></button>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="preview-box" id="previewBox">
+        <div id="previewContent" class="preview-content">
+          <!-- Rendered by renderPreview() in app.js -->
+          <div class="preview-empty">
+            <i class="bi bi-file-earmark-person"></i>
+            <p>Start filling in the form<br/>and your CV will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF button (duplicate for convenience) -->
+      <button class="btn-generate-side" id="generateBtnSide"
+              onclick="document.getElementById('cvForm').dispatchEvent(new Event('submit'))">
+        <i class="bi bi-file-pdf-fill me-2"></i>Download PDF
+      </button>
+
+      <!-- ── SIDEBAR AD 300×250 (Medium Rectangle — highest CTR format)
+           Replace .ad-demo-300 with your AdSense ins tag:
+           <ins class="adsbygoogle" style="display:block;width:300px;height:250px"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins>
+           <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      ─────────────────────────────────────────────────────────────── -->
+      <div class="ad-demo-300" id="adSlotSidebar">
+        <span class="ad-pill">Ad</span>
+        <div class="ad-300-body">
+          <i class="bi bi-mortarboard-fill ad-icon-lg"></i>
+          <strong>LinkedIn Makeover</strong>
+          <p>3× more recruiter views in 30 days — guaranteed.</p>
+          <div class="ad-stars">★★★★★ <span>4.9 / 5</span></div>
+          <a class="ad-cta-btn-300" href="#" onclick="return false">Claim Free Audit</a>
+        </div>
+      </div>
+
+    </div><!-- /preview-sticky -->
+  </div><!-- /preview-panel -->
+
+</div><!-- /app-layout -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     AD BANNER — BOTTOM LEADERBOARD 728×90
+     Replace .ad-demo-728 with your AdSense ins tag (same as top).
+═══════════════════════════════════════════════════════════════════ -->
+<div class="ad-banner-bottom">
+  <div class="ad-demo-728" id="adSlotBottom">
+    <span class="ad-pill">Ad</span>
+    <div class="ad-content">
+      <i class="bi bi-graph-up-arrow ad-icon"></i>
+      <div class="ad-text">
+        <strong>Get Interview-Ready in 24 Hours</strong>
+        <span>InterviewBuddy.ai — AI-powered mock interviews · Free trial available</span>
+      </div>
+    </div>
+    <a class="ad-cta-btn" href="#" onclick="return false">Try Free →</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PREMIUM MODAL
+═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="premiumModalBackdrop" onclick="closePremiumModal(event)">
+  <div class="premium-modal" id="premiumModal">
+
+    <!-- Header — text changes if triggered by export limit -->
+    <div class="pm-header">
+      <div>
+        <div class="pm-icon" id="pmIcon"><i class="bi bi-stars"></i></div>
+        <h4 class="pm-title" id="pmTitle">Unlock Premium</h4>
+        <p class="pm-sub" id="pmSub">Get Executive template, unlimited exports &amp; no ads</p>
+      </div>
+      <button class="pm-close" onclick="closePremiumModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Payment step 1: Choose plan -->
+    <div id="pmStep1">
+      <div class="pm-plans">
+
+        <div class="pm-plan">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">$0<span>/mo</span></div>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2 text-success"></i>2 templates</li>
+            <li><i class="bi bi-check2 text-success"></i>Unlimited PDF exports</li>
+            <li><i class="bi bi-x text-danger"></i>Executive template</li>
+            <li><i class="bi bi-x text-danger"></i>Ad-free experience</li>
+          </ul>
+          <button class="plan-btn outline" disabled>Current Plan</button>
+        </div>
+
+        <div class="pm-plan featured">
+          <div class="plan-badge">MOST POPULAR</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">$9.99<span>/mo</span></div>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2 text-success"></i>All 6 templates</li>
+            <li><i class="bi bi-check2 text-success"></i>Unlimited PDF exports</li>
+            <li><i class="bi bi-check2 text-success"></i>Executive template</li>
+            <li><i class="bi bi-check2 text-success"></i>Ad-free experience</li>
+          </ul>
+          <button class="plan-btn" onclick="showPaymentForm('Pro', '$9.99')">Get Pro</button>
+        </div>
+
+        <div class="pm-plan">
+          <div class="plan-name">Business</div>
+          <div class="plan-price">$29.99<span>/mo</span></div>
+          <ul class="plan-features">
+            <li><i class="bi bi-check2 text-success"></i>Everything in Pro</li>
+            <li><i class="bi bi-check2 text-success"></i>Team accounts (5 seats)</li>
+            <li><i class="bi bi-check2 text-success"></i>Priority support</li>
+            <li><i class="bi bi-check2 text-success"></i>Custom branding</li>
+          </ul>
+          <button class="plan-btn outline" onclick="showPaymentForm('Business', '$29.99')">Get Business</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Payment step 2: Card form -->
+    <div id="pmStep2" style="display:none">
+      <div class="pm-payment-form">
+        <h5 class="mb-3" id="pmPlanTitle">Subscribe to Pro — $9.99/mo</h5>
+        <div class="mb-3">
+          <label class="flabel">Cardholder Name</label>
+          <input type="text" class="form-control" id="pmCardName" placeholder="John Smith" />
+        </div>
+        <div class="mb-3">
+          <label class="flabel">Card Number</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-credit-card"></i>
+            <input type="text" class="form-control has-icon" id="pmCardNum"
+                   placeholder="4242 4242 4242 4242" maxlength="19"
+                   oninput="formatCardNum(this)" />
+          </div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="flabel">Expiry</label>
+            <input type="text" class="form-control" id="pmExpiry" placeholder="MM/YY" maxlength="5"
+                   oninput="formatExpiry(this)" />
+          </div>
+          <div class="col-6">
+            <label class="flabel">CVV</label>
+            <input type="password" class="form-control" id="pmCvv" placeholder="•••" maxlength="4" />
+          </div>
+        </div>
+        <div class="pm-secure-note">
+          <i class="bi bi-shield-lock-fill text-success me-1"></i>
+          Secured by 256-bit SSL encryption (Demo only — no real charge)
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-outline-secondary flex-shrink-0" onclick="showStep1()">Back</button>
+          <button class="btn-generate-action w-100" onclick="simulatePay()">
+            <i class="bi bi-lock-fill me-2"></i>Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment step 3: Success -->
+    <div id="pmStep3" style="display:none" class="pm-success">
+      <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <h4>Payment Successful!</h4>
+      <p>Welcome to Premium. Executive template and all Pro features are now unlocked.</p>
+      <button class="btn-generate-action" onclick="activatePremium()">
+        Start Using Premium <i class="bi bi-arrow-right ms-2"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

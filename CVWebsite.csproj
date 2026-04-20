@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CVWebsite</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- QuestPDF: modern fluent PDF generation library (Community license is free) -->
+    <PackageReference Include="QuestPDF" Version="2024.10.4" />
+  </ItemGroup>
+
+</Project>
