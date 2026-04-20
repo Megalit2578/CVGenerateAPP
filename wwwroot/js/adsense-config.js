@@ -1,46 +1,41 @@
 /**
  * ════════════════════════════════════════════════════════════════
  *  GOOGLE ADSENSE CONFIGURATION
- *  Chỉnh sửa file này để bật quảng cáo thật.
+ *  Publisher ID: ca-pub-4398389720271327  ✅ ACTIVE
  *
- *  HƯỚNG DẪN:
- *  1. Đăng ký tài khoản AdSense tại: https://adsense.google.com
- *  2. Thêm site của bạn và chờ Google duyệt (thường 1–14 ngày)
- *  3. Vào AdSense → Quảng cáo → Theo đơn vị quảng cáo → Tạo đơn vị mới
- *  4. Tạo 3 đơn vị (Top Banner, Sidebar Box, Bottom Banner)
- *  5. Điền các ID vào bên dưới và deploy lại
+ *  Auto Ads: Bật tự động qua script trong <head> — Google tự đặt ads.
+ *
+ *  Manual Slots: Điền slot IDs bên dưới sau khi tạo ad units tại:
+ *  AdSense → Quảng cáo → Theo đơn vị quảng cáo → Tạo đơn vị mới
  * ════════════════════════════════════════════════════════════════
  */
 
 window.ADSENSE_CONFIG = {
+  publisherId: 'ca-pub-4398389720271327',  // ✅ Real publisher ID
 
-  // Publisher ID — lấy từ: AdSense → Tài khoản → Thông tin tài khoản
-  // Ví dụ: 'ca-pub-1234567890123456'
-  publisherId: '',
-
-  // Slot IDs — mỗi đơn vị quảng cáo có 1 slot ID riêng
   slots: {
-    topBanner:    '',   // Leaderboard 728×90  (đặt ở đầu trang)
-    sidebarBox:   '',   // Medium Rectangle 300×250  (sidebar phải)
-    bottomBanner: '',   // Leaderboard 728×90  (cuối trang)
+    // Tạo ad unit "Leaderboard 728×90"  → dán Slot ID vào đây
+    topBanner:    '',
+
+    // Tạo ad unit "Medium Rectangle 300×250" → dán Slot ID vào đây
+    sidebarBox:   '',
+
+    // Tạo ad unit "Leaderboard 728×90"  → dán Slot ID vào đây
+    bottomBanner: '',
   },
 
-  // true = quảng cáo responsive tự điều chỉnh kích thước theo màn hình
   responsive: true,
 };
 
 /*
- *  VÍ DỤ KHI ĐÃ CÓ IDs (xoá dấu // để kích hoạt):
+ *  VÍ DỤ KHI CÓ SLOT IDs:
  *
- *  window.ADSENSE_CONFIG = {
- *    publisherId: 'ca-pub-1234567890123456',
- *    slots: {
- *      topBanner:    '9876543210',
- *      sidebarBox:   '1234509876',
- *      bottomBanner: '5678901234',
- *    },
- *    responsive: true,
- *  };
+ *  slots: {
+ *    topBanner:    '1234567890',
+ *    sidebarBox:   '0987654321',
+ *    bottomBanner: '1122334455',
+ *  }
  *
- *  SAU ĐÓ chạy: dotnet publish → upload lên hosting → XONG!
+ *  → git add . && git commit -m "Add slot IDs" && git push
+ *  → Railway tự deploy lại trong ~1 phút
  */
