@@ -4,93 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thanh toán thành công — CV Builder Pro</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <style>
-    body { background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .card-wrap { background: #fff; border-radius: 16px; padding: 48px 40px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,.08); }
-    .icon-circle { width: 80px; height: 80px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 2.2rem; color: #16a34a; }
-    .icon-circle.error { background: #fee2e2; color: #dc2626; }
-    .icon-circle.loading { background: #dbeafe; color: #2563eb; }
-    h2 { font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-    p { color: #64748b; }
-    .btn-home { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 600; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; }
-    .btn-home:hover { background: #1e40af; color: #fff; }
+    body { background:#f1f5f9; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .card { max-width:440px; width:100%; border:none; border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,.12); }
+    .icon-ok  { font-size:4rem; color:#10b981; animation:pop .4s ease; }
+    .icon-err { font-size:4rem; color:#ef4444; }
+    .icon-spin{ font-size:3rem; color:#6366f1; animation:spin 1s linear infinite; }
+    @keyframes pop  { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .btn-home { background:linear-gradient(135deg,#1d4ed8,#7c3aed); color:#fff; border:none;
+                border-radius:8px; padding:11px 24px; font-weight:700; width:100%; }
+    .btn-home:hover { opacity:.88; color:#fff; }
   </style>
 </head>
 <body>
-  <div class="card-wrap" id="card">
-    <!-- Loading state -->
-    <div id="stateLoading">
-      <div class="icon-circle loading">
-        <span class="spinner-border" style="width:2rem;height:2rem;border-width:3px"></span>
-      </div>
-      <h2>Đang xác minh…</h2>
-      <p>Vui lòng chờ trong giây lát.</p>
-    </div>
+<div class="card p-5 text-center">
 
-    <!-- Success state -->
-    <div id="stateSuccess" style="display:none">
-      <div class="icon-circle"><i class="bi bi-check-circle-fill"></i></div>
-      <h2>Thanh toán thành công!</h2>
-      <p>Chúc mừng! Tài khoản của bạn đã được nâng cấp lên <strong>Premium</strong>.<br>Tất cả tính năng Pro đã được mở khoá.</p>
-      <a href="/" class="btn-home"><i class="bi bi-stars me-2"></i>Bắt đầu tạo CV</a>
-    </div>
-
-    <!-- Error state -->
-    <div id="stateError" style="display:none">
-      <div class="icon-circle error"><i class="bi bi-x-circle-fill"></i></div>
-      <h2>Xác minh thất bại</h2>
-      <p id="errorMsg">Không tìm thấy thông tin thanh toán. Vui lòng liên hệ hỗ trợ.</p>
-      <a href="/" class="btn-home" style="background:#dc2626">Quay về trang chủ</a>
-    </div>
+  <div id="stateLoading">
+    <i class="bi bi-arrow-repeat icon-spin d-block mb-3"></i>
+    <h5>Đang xác minh thanh toán…</h5>
   </div>
 
-  <script>
-    (async () => {
-      const params = new URLSearchParams(location.search);
-      const orderCode = params.get('orderCode');
-      const status    = params.get('status');   // PayOS also sends this in the URL
+  <div id="stateSuccess" style="display:none">
+    <i class="bi bi-check-circle-fill icon-ok d-block mb-3"></i>
+    <h4 class="fw-bold mb-1">Thanh toán thành công! 🎉</h4>
+    <p class="text-muted mb-4">Tài khoản <strong>Premium</strong> đã kích hoạt.<br>Xuất PDF không giới hạn, không watermark.</p>
+    <a href="/" class="btn-home text-decoration-none d-block">Quay lại tạo CV →</a>
+  </div>
 
-      // PayOS redirects with status=PAID in the URL — use as fast path
-      if (status === 'PAID' && orderCode) {
-        // Verify server-side before granting premium
-        try {
-          const res  = await fetch(`/api/payment/verify?orderCode=${orderCode}`);
-          const data = await res.json();
-          if (data.paid) {
-            activatePremium();
-            return;
-          }
-        } catch (_) {}
-      }
+  <div id="stateFail" style="display:none">
+    <i class="bi bi-x-circle-fill icon-err d-block mb-3"></i>
+    <h4 class="fw-bold mb-1">Thanh toán chưa hoàn tất</h4>
+    <p class="text-muted mb-4">Đơn hàng chưa được thanh toán hoặc đã bị huỷ.</p>
+    <a href="/" class="btn-home text-decoration-none d-block">← Thử lại</a>
+  </div>
 
-      // Fallback: check status regardless of URL param
-      if (orderCode) {
-        try {
-          const res  = await fetch(`/api/payment/verify?orderCode=${orderCode}`);
-          const data = await res.json();
-          if (data.paid) { activatePremium(); return; }
-          showError(`Trạng thái đơn hàng: ${data.status ?? 'không xác định'}`);
-        } catch (e) {
-          showError('Lỗi kết nối máy chủ. Vui lòng thử lại.');
-        }
-      } else {
-        showError('Không tìm thấy mã đơn hàng trong URL.');
-      }
-    })();
+</div>
+<script>
+  // PayOS appends ?orderCode=xxx&status=PAID to the returnUrl
+  const params    = new URLSearchParams(location.search);
+  const orderCode = params.get('orderCode');
+  const status    = (params.get('status') || '').toUpperCase();
 
-    function activatePremium() {
-      localStorage.setItem('cvbPremium_v1', '1');
-      document.getElementById('stateLoading').style.display = 'none';
-      document.getElementById('stateSuccess').style.display = '';
+  async function verify() {
+    if (status === 'PAID') { markSuccess(); return; }
+
+    if (orderCode) {
+      try {
+        const res  = await fetch('/api/payment/verify?orderCode=' + orderCode);
+        const data = await res.json();
+        if (data.paid) { markSuccess(); return; }
+      } catch (_) {}
     }
 
-    function showError(msg) {
-      document.getElementById('errorMsg').textContent = msg;
-      document.getElementById('stateLoading').style.display = 'none';
-      document.getElementById('stateError').style.display = '';
-    }
-  </script>
+    show('stateFail');
+  }
+
+  function markSuccess() {
+    // Activate premium in localStorage — main app reads this on next load
+    localStorage.setItem('cvbPremium_v1', '1');
+    show('stateSuccess');
+  }
+
+  function show(id) {
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById(id).style.display = '';
+  }
+
+  verify();
+</script>
 </body>
 </html>

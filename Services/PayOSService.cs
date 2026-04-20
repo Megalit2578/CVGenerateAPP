@@ -1,56 +1,62 @@
-using Net.payOS;
-using Net.payOS.Types;
+using PayOS;
+using PayOS.Models;
+using PayOS.Models.V2.PaymentRequests;
 
 namespace CVWebsite.Services;
 
+/// <summary>
+/// Wraps the payOS v2 SDK for creating payment links and verifying status.
+/// Credentials are read from appsettings.json → section "PayOS".
+/// </summary>
 public class PayOSService
 {
-    private readonly PayOS _payOS;
+    private readonly PayOSClient _client;
 
-    // Plans: key → (displayName, amountVND)
+    // Plans available for purchase
     public static readonly Dictionary<string, (string Name, int Amount)> Plans = new()
     {
-        ["pro"]      = ("CV Builder Pro",      29000),
-        ["business"] = ("CV Builder Business", 99000),
+        ["pro"]      = ("CV Builder Pro",      29_000),
+        ["business"] = ("CV Builder Business", 99_000),
     };
 
     public PayOSService(IConfiguration config)
     {
-        var section = config.GetSection("PayOS");
-        _payOS = new PayOS(
-            clientId:    section["ClientId"]!,
-            apiKey:      section["ApiKey"]!,
-            checksumKey: section["ChecksumKey"]!
-        );
+        var s = config.GetSection("PayOS");
+        _client = new PayOSClient(new PayOSOptions
+        {
+            ClientId    = s["ClientId"]!,
+            ApiKey      = s["ApiKey"]!,
+            ChecksumKey = s["ChecksumKey"]!,
+        });
     }
 
+    /// <summary>Creates a PayOS checkout URL.</summary>
     public async Task<string> CreatePaymentLinkAsync(string plan, string returnUrl, string cancelUrl)
     {
         if (!Plans.TryGetValue(plan, out var info))
             throw new ArgumentException($"Unknown plan: {plan}");
 
-        // orderCode must be a unique positive long — use timestamp + small random
         long orderCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 10_000_000_000L
-                         + new Random().Next(0, 1000);
+                         + new Random().Next(1, 999);
 
-        var items = new List<ItemData> { new ItemData(info.Name, 1, info.Amount) };
+        var request = new CreatePaymentLinkRequest
+        {
+            OrderCode   = orderCode,
+            Amount      = info.Amount,
+            Description = info.Name[..Math.Min(info.Name.Length, 25)],
+            ReturnUrl   = returnUrl,
+            CancelUrl   = cancelUrl,
+        };
 
-        var paymentData = new PaymentData(
-            orderCode:   orderCode,
-            amount:      info.Amount,
-            description: info.Name[..Math.Min(info.Name.Length, 25)],
-            items:       items,
-            cancelUrl:   cancelUrl,
-            returnUrl:   returnUrl
-        );
-
-        CreatePaymentResult result = await _payOS.createPaymentLink(paymentData);
-        return result.checkoutUrl;
+        var result = await _client.PaymentRequests.CreateAsync(request);
+        return result.CheckoutUrl;
     }
 
-    public async Task<PaymentLinkInformation> GetPaymentInfoAsync(long orderCode)
-        => await _payOS.getPaymentLinkInformation(orderCode);
-
-    public WebhookData VerifyWebhookData(WebhookType webhookBody)
-        => _payOS.verifyPaymentWebhookData(webhookBody);
+    /// <summary>Returns whether an order has been paid.</summary>
+    public async Task<(bool Paid, string Status)> GetPaymentStatusAsync(long orderCode)
+    {
+        var info   = await _client.PaymentRequests.GetAsync(orderCode);
+        var status = info.Status.ToString();
+        return (status == "PAID", status);
+    }
 }
