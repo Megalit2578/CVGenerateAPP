@@ -25,7 +25,7 @@ if (!string.IsNullOrEmpty(databaseUrl))
     var uri     = new Uri(databaseUrl);
     var info    = uri.UserInfo.Split(':');
     var pgConn  = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};"
-                + $"Username={info[0]};Password={info[1]};SSL Mode=Require;Trust Server Certificate=true";
+                + $"Username={info[0]};Password={info[1]};SSL Mode=Disable";
     builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(pgConn));
     Console.WriteLine("[DB] Using PostgreSQL (Railway)");
 }
