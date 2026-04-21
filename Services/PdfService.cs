@@ -659,16 +659,25 @@ public class PdfService
                     if (cv.Skills.Any(s => !string.IsNullOrWhiteSpace(s.Name)))
                     {
                         sb.Item().PaddingTop(12).Text("SKILLS").Bold().FontSize(7.5f).FontColor("#64748b");
-                        sb.Item().PaddingTop(5).PaddingBottom(6);
-                        sb.Item().Wrap().Row(pills =>
+                        sb.Item().PaddingTop(5).PaddingBottom(4);
+                        foreach (var skill in cv.Skills.Where(s => !string.IsNullOrWhiteSpace(s.Name)))
                         {
-                            foreach (var skill in cv.Skills.Where(s => !string.IsNullOrWhiteSpace(s.Name)))
+                            sb.Item().PaddingBottom(8).Column(s =>
                             {
-                                pills.AutoItem().PaddingRight(4).PaddingBottom(4)
-                                     .Background(pal.Accent).Padding(2, 7)
-                                     .Text(skill.Name).FontSize(7.5f).Bold().FontColor(pal.SideText);
-                            }
-                        });
+                                s.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text(skill.Name).FontSize(8.5f).FontColor("#334155");
+                                    r.ConstantItem(28).AlignRight()
+                                     .Text($"{skill.Level}%").FontSize(7).FontColor("#64748b");
+                                });
+                                var fill = Math.Clamp(skill.Level, 0, 100);
+                                s.Item().PaddingTop(3).Height(3).Row(bar =>
+                                {
+                                    if (fill > 0)   bar.RelativeItem(fill).Background(pal.Accent);
+                                    if (fill < 100) bar.RelativeItem(100 - fill).Background("#d1d5db");
+                                });
+                            });
+                        }
                     }
 
                     if (cv.Education.Any(e => !string.IsNullOrWhiteSpace(e.Degree)))
@@ -745,7 +754,11 @@ public class PdfService
                 hdr.RelativeItem().Column(col =>
                 {
                     col.Item().Text(cv.FullName).Bold().FontSize(22).FontColor("#f1f5f9");
-                    col.Item().PaddingTop(6).Height(2).Width(50).Background(pal.Accent);
+                    col.Item().PaddingTop(6).Row(accentRow =>
+                    {
+                        accentRow.ConstantItem(50).Height(2).Background(pal.Accent);
+                        accentRow.RelativeItem();
+                    });
                     var contacts = new[] { cv.Email, cv.Phone, cv.Address }
                         .Where(c => !string.IsNullOrWhiteSpace(c));
                     if (contacts.Any())
@@ -820,10 +833,9 @@ public class PdfService
                         {
                             mc.Item().PaddingBottom(12).Row(jrow =>
                             {
-                                // Dot
-                                jrow.ConstantItem(16).PaddingTop(4)
-                                    .Width(9).Height(9).Background(pal.Accent);
-                                jrow.RelativeItem().Column(j =>
+                                // Accent left strip (dot replacement)
+                                jrow.ConstantItem(6).Background(pal.Accent);
+                                jrow.RelativeItem().PaddingLeft(10).Column(j =>
                                 {
                                     j.Item().Row(r =>
                                     {
