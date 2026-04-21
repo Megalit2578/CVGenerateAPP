@@ -116,6 +116,59 @@ body {
 .btn-premium-nav:hover  { opacity: .9; }
 .btn-premium-nav:active { transform: scale(.97); }
 
+/* ── Nav auth area ─────────────────────────────────────────────── */
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.btn-nav-outline {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.45);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-nav-outline:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); }
+.nav-user-email {
+  color: rgba(255,255,255,.85);
+  font-size: .8rem;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-plan-badge {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: .06em;
+}
+.nav-plan-badge.plan-pro      { background: #1d4ed8; color: #fff; }
+.nav-plan-badge.plan-business { background: #7c3aed; color: #fff; }
+
+/* ── Auth modal tabs ────────────────────────────────────────────── */
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-bottom: 2px solid var(--c-border);
+  background: transparent;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  color: var(--c-muted);
+  transition: color .2s, border-color .2s;
+}
+.auth-tab.active {
+  color: var(--c-accent);
+  border-bottom-color: var(--c-accent);
+}
+
 /* ── Ad banners ─────────────────────────────────────────────────── */
 .ad-banner-top,
 .ad-banner-bottom {

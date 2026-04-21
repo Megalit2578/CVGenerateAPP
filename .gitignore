@@ -10,6 +10,11 @@ obj/
 publish/
 out/
 
+## SQLite local database
+*.db
+*.db-shm
+*.db-wal
+
 ## Secrets / local config
 appsettings.Development.json
 appsettings.Local.json

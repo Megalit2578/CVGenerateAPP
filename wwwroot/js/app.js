@@ -42,13 +42,7 @@ let _eduIdx = 0, _expIdx = 0, _sklIdx = 0; // unique IDs for dynamic entries
 // ════════════════════════════════════════════════════════════════════════════
 //  INITIALISE
 // ════════════════════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  // ── Restore premium status from localStorage (persists across sessions)
-  if (localStorage.getItem(STORAGE_KEY_PREMIUM) === '1') {
-    state.isPremium = true;
-    state.plan = localStorage.getItem(STORAGE_KEY_PLAN) || 'pro';
-  }
-
+document.addEventListener('DOMContentLoaded', async () => {
   // ── Activate real Google AdSense if publisher ID is configured
   initAdsense();
 
@@ -56,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTemplateSelector(); // also calls refreshTemplateUnlocks()
   setupThemeSelector();
   setupFormSubmit();
-  updateCounterBadge();     // show correct export count on nav
 
   // Seed with one blank entry each so the form isn't empty
   addEducation();
@@ -65,6 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
   addExperience();
 
   renderPreview();
+
+  // ── Auth: fetch current user from server (validates JWT, gets fresh plan)
+  await fetchMe();          // updates state.user + state.plan + nav
+  updateCounterBadge();
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -910,6 +907,13 @@ window.addEventListener('pageshow', event => {
 });
 
 async function startPayOSPayment() {
+  // Require login before payment
+  if (!state.user) {
+    closePremiumModal();
+    openAuthModal('login', () => openPremiumModal());
+    return;
+  }
+
   const btn   = document.getElementById('pmPayBtn');
   const errEl = document.getElementById('pmPayError');
   errEl.style.display = 'none';
@@ -919,7 +923,7 @@ async function startPayOSPayment() {
   try {
     const res  = await fetch('/api/payment/create-link', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body:    JSON.stringify({ plan: _currentPlan }),
     });
     const data = await res.json();
@@ -991,6 +995,174 @@ function showStatus(msg, type) {
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  AUTH  — Login / Register
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Returns { Authorization: 'Bearer ...' } if JWT is stored, else {}. */
+function authHeaders() {
+  const token = localStorage.getItem(STORAGE_KEY_JWT);
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+/**
+ * Calls GET /api/auth/me with the stored JWT.
+ * On success: updates state.user, state.plan, state.isPremium and syncs nav.
+ * On 401/missing JWT: clears user state (free plan).
+ */
+async function fetchMe() {
+  const token = localStorage.getItem(STORAGE_KEY_JWT);
+  if (!token) { syncAuthState(); return; }
+
+  try {
+    const res = await fetch('/api/auth/me', { headers: authHeaders() });
+    if (res.ok) {
+      const { id, email, plan } = await res.json();
+      state.user      = { id, email, plan };
+      state.plan      = plan;
+      state.isPremium = (plan !== 'free');
+    } else {
+      // JWT expired or invalid — clear it
+      localStorage.removeItem(STORAGE_KEY_JWT);
+      state.user = null; state.plan = 'free'; state.isPremium = false;
+    }
+  } catch (_) {
+    state.user = null; state.plan = 'free'; state.isPremium = false;
+  }
+  syncAuthState();
+  refreshTemplateUnlocks();
+  updateCounterBadge();
+}
+
+/** Updates the nav bar to reflect logged-in / logged-out state. */
+function syncAuthState() {
+  const userArea   = document.getElementById('navUserArea');
+  const loginBtn   = document.getElementById('navLoginBtn');
+  const upgradeBtn = document.getElementById('navUpgradeBtn');
+  const emailEl    = document.getElementById('navUserEmail');
+  const badgeEl    = document.getElementById('navPlanBadge');
+
+  if (state.user) {
+    userArea.style.display  = '';
+    loginBtn.style.display  = 'none';
+    emailEl.textContent     = state.user.email;
+
+    const planLabels = { pro: 'PRO', business: 'BUSINESS' };
+    if (planLabels[state.plan]) {
+      badgeEl.textContent = planLabels[state.plan];
+      badgeEl.className   = `nav-plan-badge plan-${state.plan}`;
+      badgeEl.style.display = '';
+      if (upgradeBtn) upgradeBtn.style.display = 'none';
+    } else {
+      badgeEl.style.display = 'none';
+      if (upgradeBtn) upgradeBtn.style.display = '';
+    }
+  } else {
+    userArea.style.display  = 'none';
+    loginBtn.style.display  = '';
+    if (upgradeBtn) upgradeBtn.style.display = '';
+  }
+}
+
+function logoutUser() {
+  localStorage.removeItem(STORAGE_KEY_JWT);
+  state.user = null; state.plan = 'free'; state.isPremium = false;
+  syncAuthState();
+  refreshTemplateUnlocks();
+  updateCounterBadge();
+}
+
+// Callback to run after successful login/register (e.g., re-open premium modal)
+let _authCallback = null;
+
+function openAuthModal(mode = 'login', callback = null) {
+  _authCallback = callback;
+  switchAuthTab(mode);
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authModalBackdrop').classList.add('open');
+}
+
+function closeAuthModal(event) {
+  if (event && event.target !== document.getElementById('authModalBackdrop')) return;
+  document.getElementById('authModalBackdrop').classList.remove('open');
+}
+
+function switchAuthTab(mode) {
+  const isLogin = mode === 'login';
+  document.getElementById('authLoginForm').style.display    = isLogin ? '' : 'none';
+  document.getElementById('authRegisterForm').style.display = isLogin ? 'none' : '';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('authModalTitle').textContent = isLogin ? 'Đăng nhập' : 'Đăng ký tài khoản';
+  document.getElementById('authError').style.display = 'none';
+}
+
+async function submitLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('authError');
+  const btn      = document.getElementById('loginBtn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng nhập…';
+
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Đăng nhập thất bại.');
+
+    localStorage.setItem(STORAGE_KEY_JWT, data.token);
+    await fetchMe();
+    document.getElementById('authModalBackdrop').classList.remove('open');
+    showStatus(`Xin chào, ${data.user.email}!`, 'success');
+    if (_authCallback) { _authCallback(); _authCallback = null; }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập';
+  }
+}
+
+async function submitRegister() {
+  const email    = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errEl    = document.getElementById('authError');
+  const btn      = document.getElementById('registerBtn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng ký…';
+
+  try {
+    const res  = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Đăng ký thất bại.');
+
+    localStorage.setItem(STORAGE_KEY_JWT, data.token);
+    await fetchMe();
+    document.getElementById('authModalBackdrop').classList.remove('open');
+    showStatus(`Đăng ký thành công! Xin chào, ${data.user.email}!`, 'success');
+    if (_authCallback) { _authCallback(); _authCallback = null; }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Đăng ký';
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -30,7 +30,7 @@
   <div id="stateSuccess" style="display:none">
     <i class="bi bi-check-circle-fill icon-ok d-block mb-3"></i>
     <h4 class="fw-bold mb-1" id="successTitle">Thanh toán thành công! 🎉</h4>
-    <p class="text-muted mb-4" id="successDesc">Tài khoản <strong>Premium</strong> đã kích hoạt.<br>Xuất PDF không giới hạn, không watermark.</p>
+    <p class="text-muted mb-4" id="successDesc">Tài khoản đã được kích hoạt.</p>
     <a href="/" class="btn-home text-decoration-none d-block">Quay lại tạo CV →</a>
   </div>
 
@@ -43,34 +43,51 @@
 
 </div>
 <script>
+  const STORAGE_KEY_JWT = 'cvbJwt';
+
   // PayOS appends ?orderCode=xxx&status=PAID to the returnUrl.
   // IMPORTANT: We never trust the URL params directly — always verify with the backend.
   const params    = new URLSearchParams(location.search);
   const orderCode = params.get('orderCode');
 
-  // Retrieve the plan that was stored in sessionStorage before the PayOS redirect
+  // Retrieve plan stored in sessionStorage before the PayOS redirect
   const plan = sessionStorage.getItem('cvbPaymentPlan') || 'pro';
+
+  function authHeaders() {
+    const token = localStorage.getItem(STORAGE_KEY_JWT);
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
 
   async function verify() {
     if (!orderCode) { show('stateFail'); return; }
 
     try {
-      const res  = await fetch('/api/payment/verify?orderCode=' + encodeURIComponent(orderCode));
+      const res = await fetch('/api/payment/verify?orderCode=' + encodeURIComponent(orderCode), {
+        headers: authHeaders(),
+      });
       if (!res.ok) throw new Error('verify failed');
       const data = await res.json();
-      if (data.paid) { markSuccess(plan); return; }
+      if (data.paid) { await markSuccess(plan); return; }
     } catch (_) {}
 
     show('stateFail');
   }
 
-  function markSuccess(activatedPlan) {
-    // Persist plan type — main app reads this on next load
-    localStorage.setItem('cvbPremium_v1', '1');
-    localStorage.setItem('cvbPlan_v1', activatedPlan);
+  async function markSuccess(activatedPlan) {
     sessionStorage.removeItem('cvbPaymentPlan');
 
-    // Update success message based on plan
+    // Refresh JWT — server has already upgraded the plan in DB
+    // Re-fetch user so future page loads get the correct plan from the server
+    try {
+      const meRes = await fetch('/api/auth/me', { headers: authHeaders() });
+      if (meRes.ok) {
+        // The fresh plan comes from the DB via JWT — no localStorage needed
+        // Just ensure the old premium localStorage keys are cleared
+        localStorage.removeItem('cvbPremium_v1');
+        localStorage.removeItem('cvbPlan_v1');
+      }
+    } catch (_) {}
+
     const planLabel = activatedPlan === 'business' ? 'Business' : 'Pro';
     document.getElementById('successTitle').textContent = `Kích hoạt ${planLabel} thành công! 🎉`;
     document.getElementById('successDesc').innerHTML =
