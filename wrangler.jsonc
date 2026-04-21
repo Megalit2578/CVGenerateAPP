@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cvgenerateapp",
+  "compatibility_date": "2026-04-21",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "wwwroot"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
