@@ -11,27 +11,41 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load appsettings.Local.json nếu có (local dev, gitignored — không lên Railway)
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
 builder.Services.AddControllers();
 
-// ── Database ────────────────────────────────────────────────────────────────
-// Railway provides DATABASE_URL as postgres://user:pass@host:port/db
-// Local dev falls back to SQLite.
+// ── Database ─────────────────────────────────────────────────────────────────
+// Ưu tiên: DATABASE_URL (Railway PostgreSQL) → SQL Server → SQLite
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
     // Railway: DATABASE_URL = postgres://user:pass@host:port/db
-    var uri  = new Uri(databaseUrl);
-    var info = uri.UserInfo.Split(':');
-    var connStr = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};"
+    var uri     = new Uri(databaseUrl);
+    var info    = uri.UserInfo.Split(':');
+    var pgConn  = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};"
                 + $"Username={info[0]};Password={info[1]};SSL Mode=Require;Trust Server Certificate=true";
-    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(connStr));
+    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(pgConn));
+    Console.WriteLine("[DB] Using PostgreSQL (Railway)");
 }
 else
 {
-    // Local: SQL Server (SSMS) via appsettings.json
     var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
-               ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not set.");
-    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connStr));
+               ?? "Data Source=cvwebsite.db";
+
+    // Nếu connection string là SQL Server format → dùng SQL Server, còn lại dùng SQLite
+    if (connStr.Contains("Server=", StringComparison.OrdinalIgnoreCase) ||
+        connStr.Contains("Data Source=tcp:", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connStr));
+        Console.WriteLine("[DB] Using SQL Server (local)");
+    }
+    else
+    {
+        builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(connStr));
+        Console.WriteLine("[DB] Using SQLite (fallback)");
+    }
 }
 
 // ── JWT Authentication ───────────────────────────────────────────────────────
