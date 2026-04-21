@@ -1129,8 +1129,9 @@ async function submitLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? 'Đăng nhập thất bại.');
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!res.ok) throw new Error(data.error ?? `Lỗi server (${res.status}). Vui lòng thử lại.`);
 
     localStorage.setItem(STORAGE_KEY_JWT, data.token);
     await fetchMe();
@@ -1162,8 +1163,9 @@ async function submitRegister() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? 'Đăng ký thất bại.');
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!res.ok) throw new Error(data.error ?? `Lỗi server (${res.status}). Vui lòng thử lại.`);
 
     localStorage.setItem(STORAGE_KEY_JWT, data.token);
     await fetchMe();

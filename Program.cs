@@ -101,6 +101,14 @@ var noCache = new StaticFileOptions
         ctx.Context.Response.Headers["Expires"]       = "0";
     }
 };
+// ── Global JSON error handler ─────────────────────────────────────────────────
+app.UseExceptionHandler(err => err.Run(async ctx =>
+{
+    ctx.Response.StatusCode  = 500;
+    ctx.Response.ContentType = "application/json";
+    await ctx.Response.WriteAsync("{\"error\":\"Internal server error. Please try again.\"}");
+}));
+
 app.UseDefaultFiles();
 app.UseStaticFiles(noCache);
 
