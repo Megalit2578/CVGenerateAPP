@@ -104,9 +104,12 @@ var noCache = new StaticFileOptions
 // ── Global JSON error handler ─────────────────────────────────────────────────
 app.UseExceptionHandler(err => err.Run(async ctx =>
 {
+    var ex  = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+    var msg = ex?.Message ?? "Internal server error.";
+    Console.WriteLine($"[EXCEPTION] {ex?.GetType().Name}: {msg}\n{ex?.StackTrace}");
     ctx.Response.StatusCode  = 500;
     ctx.Response.ContentType = "application/json";
-    await ctx.Response.WriteAsync("{\"error\":\"Internal server error. Please try again.\"}");
+    await ctx.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new { error = msg }));
 }));
 
 app.UseDefaultFiles();
