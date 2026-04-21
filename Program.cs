@@ -81,12 +81,15 @@ builder.Services.AddSingleton<JwtService>();
 
 var app = builder.Build();
 
-// ── Auto-migrate on startup ──────────────────────────────────────────────────
-using (var scope = app.Services.CreateScope())
+// ── Auto-migrate on startup (background so /health responds immediately) ─────
+_ = Task.Run(async () =>
 {
+    await Task.Delay(500); // let the host fully start first
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
-}
+    Console.WriteLine("[DB] Migration complete.");
+});
 
 // ── Static files (no browser cache) ─────────────────────────────────────────
 var noCache = new StaticFileOptions
