@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cvwebsite
+      POSTGRES_PASSWORD: cvwebsite_pass
+      POSTGRES_DB: cvwebsite
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cvwebsite"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:8080"
+    environment:
+      DATABASE_URL: postgres://cvwebsite:cvwebsite_pass@db:5432/cvwebsite
+      Jwt__Secret: "change_me_in_production_long_random_secret_key_32plus"
+      Jwt__Issuer: CVWebsite
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg_data:

@@ -6,7 +6,7 @@
   <title>CV Builder Pro — Professional Resume Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link href="/css/style.css?v=3" rel="stylesheet" />
+  <link href="/css/style.css?v=4" rel="stylesheet" />
   <!-- ═══ GOOGLE ADSENSE — Real publisher script ═══ -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4398389720271327"
           crossorigin="anonymous"></script>
@@ -25,12 +25,24 @@
       CV Builder <span class="brand-pro">Pro</span>
     </div>
     <div class="nav-center d-none d-md-flex gap-3 align-items-center">
-      <!-- Export counter — updated by JS -->
       <span id="exportCounter" class="counter-badge">3 exports left today</span>
     </div>
-    <button class="btn-premium-nav" onclick="openPremiumModal()">
-      <i class="bi bi-stars me-1"></i>Upgrade to Premium
-    </button>
+    <div class="nav-right d-flex align-items-center gap-2">
+      <!-- Shown when logged in -->
+      <div id="navUserArea" style="display:none" class="d-flex align-items-center gap-2">
+        <span id="navUserEmail" class="nav-user-email"></span>
+        <span id="navPlanBadge" class="nav-plan-badge"></span>
+        <button class="btn-nav-outline" onclick="logoutUser()">Đăng xuất</button>
+      </div>
+      <!-- Shown when logged out -->
+      <button id="navLoginBtn" class="btn-nav-outline" onclick="openAuthModal('login')">
+        <i class="bi bi-person me-1"></i>Đăng nhập
+      </button>
+      <!-- Upgrade button — hidden when already pro/business -->
+      <button id="navUpgradeBtn" class="btn-premium-nav" onclick="openPremiumModal()">
+        <i class="bi bi-stars me-1"></i>Nâng cấp
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -439,7 +451,62 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════
+     AUTH MODAL — Login / Register
+═══════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="authModalBackdrop" onclick="closeAuthModal(event)">
+  <div class="premium-modal" id="authModal" style="max-width:420px">
+    <div class="pm-header">
+      <div>
+        <div class="pm-icon"><i class="bi bi-person-circle"></i></div>
+        <h4 class="pm-title" id="authModalTitle">Đăng nhập</h4>
+        <p class="pm-sub">Cần tài khoản để mua gói Pro / Business</p>
+      </div>
+      <button class="pm-close" onclick="closeAuthModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="d-flex gap-2 mb-3">
+      <button id="tabLogin"    class="auth-tab active"  onclick="switchAuthTab('login')">Đăng nhập</button>
+      <button id="tabRegister" class="auth-tab"         onclick="switchAuthTab('register')">Đăng ký</button>
+    </div>
+
+    <div id="authError" class="alert alert-danger py-2 px-3 mb-2" style="display:none;font-size:.9rem"></div>
+
+    <!-- Login form -->
+    <div id="authLoginForm">
+      <div class="mb-3">
+        <label class="flabel">Email</label>
+        <input type="email" id="loginEmail" class="form-control" placeholder="email@example.com" />
+      </div>
+      <div class="mb-3">
+        <label class="flabel">Mật khẩu</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" />
+      </div>
+      <button class="btn-generate-action w-100" id="loginBtn" onclick="submitLogin()">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="authRegisterForm" style="display:none">
+      <div class="mb-3">
+        <label class="flabel">Email</label>
+        <input type="email" id="regEmail" class="form-control" placeholder="email@example.com" />
+      </div>
+      <div class="mb-3">
+        <label class="flabel">Mật khẩu <small class="text-muted">(tối thiểu 6 ký tự)</small></label>
+        <input type="password" id="regPassword" class="form-control" placeholder="••••••••" />
+      </div>
+      <button class="btn-generate-action w-100" id="registerBtn" onclick="submitRegister()">
+        <i class="bi bi-person-plus me-2"></i>Đăng ký
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/app.js?v=3"></script>
+<script src="/js/app.js?v=4"></script>
 </body>
 </html>

@@ -11,11 +11,12 @@
 
 // ── App state ────────────────────────────────────────────────────────────────
 const state = {
-  template: 'modern',   // 'modern' | 'classic'
-  theme:    'blue',     // 'blue' | 'dark' | 'purple' | 'emerald'
+  template:  'modern',  // 'modern' | 'classic'
+  theme:     'blue',    // 'blue' | 'dark' | 'purple' | 'emerald'
   isPremium: false,
-  plan:     'free',     // 'free' | 'pro' | 'business'
+  plan:      'free',    // 'free' | 'pro' | 'business'
   profilePic: null,     // compressed base64 data-URL or null
+  user:      null,      // { id, email, plan } when logged in, null otherwise
 };
 
 // ── Monetization constants ────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const FREE_DAILY_LIMIT = 3; // free exports per day before paywall
 const STORAGE_KEY_PREMIUM = 'cvbPremium_v1';
 const STORAGE_KEY_PLAN    = 'cvbPlan_v1';    // 'pro' | 'business'
 const STORAGE_KEY_EXPORTS = 'cvbExports_v1';
+const STORAGE_KEY_JWT     = 'cvbJwt';        // JWT from /api/auth/login or /register
 
 // Colour palette per theme (mirrors PdfService on the backend)
 const THEMES = {
