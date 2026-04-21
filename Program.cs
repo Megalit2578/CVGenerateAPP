@@ -19,7 +19,7 @@ builder.Services.AddControllers();
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
-    // Parse postgres:// URI → Npgsql connection string
+    // Railway: DATABASE_URL = postgres://user:pass@host:port/db
     var uri  = new Uri(databaseUrl);
     var info = uri.UserInfo.Split(':');
     var connStr = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};"
@@ -28,8 +28,10 @@ if (!string.IsNullOrEmpty(databaseUrl))
 }
 else
 {
-    var sqlite = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=cvwebsite.db";
-    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(sqlite));
+    // Local: SQL Server (SSMS) via appsettings.json
+    var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
+               ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not set.");
+    builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connStr));
 }
 
 // ── JWT Authentication ───────────────────────────────────────────────────────
