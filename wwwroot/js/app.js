@@ -30,6 +30,9 @@ const THEMES = {
   dark:    { accent: '#0f172a', light: '#e2e8f0', track: '#334155', text: '#f1f5f9' },
   purple:  { accent: '#7c3aed', light: '#ede9fe', track: '#9d6cf5', text: '#ffffff' },
   emerald: { accent: '#059669', light: '#d1fae5', track: '#34d399', text: '#ffffff' },
+  rose:    { accent: '#e11d48', light: '#ffe4e6', track: '#fb7185', text: '#ffffff' },
+  teal:    { accent: '#0891b2', light: '#cffafe', track: '#22d3ee', text: '#ffffff' },
+  orange:  { accent: '#ea580c', light: '#ffedd5', track: '#fb923c', text: '#ffffff' },
 };
 
 let _eduIdx = 0, _expIdx = 0, _sklIdx = 0; // unique IDs for dynamic entries
@@ -48,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdsense();
 
   setupEventDelegation();
-  setupTemplateSelector();
+  setupTemplateSelector(); // also calls refreshTemplateUnlocks()
   setupThemeSelector();
   setupFormSubmit();
   updateCounterBadge();     // show correct export count on nav
@@ -133,19 +136,23 @@ function renderPreview() {
   const data = collectData();
   const box  = document.getElementById('previewContent');
 
+  // Use placeholder values so template/theme changes are always visible
+  // even before the user fills in the form.
   if (!data.fullName) {
-    box.innerHTML = `<div class="preview-empty">
-      <i class="bi bi-file-earmark-person"></i>
-      <p>Enter your <strong>Full Name</strong> to start previewing.</p>
-    </div>`;
-    return;
+    data.fullName = 'Your Full Name';
+    data.email    = data.email    || 'your@email.com';
+    data.address  = data.address  || 'City, Country';
+    data.summary  = data.summary  || 'A brief professional summary will appear here once you fill in the form above.';
   }
 
-  const html = data.template === 'classic'
-    ? buildClassicPreview(data)
-    : buildModernPreview(data);
-
-  box.innerHTML = html;
+  const builders = {
+    classic:   buildClassicPreview,
+    executive: buildExecutivePreview,
+    minimal:   buildMinimalPreview,
+    creative:  buildCreativePreview,
+  };
+  const fn = builders[data.template] ?? buildModernPreview;
+  box.innerHTML = fn(data);
 }
 
 // Called from the "Refresh Preview" button and template/theme selectors
@@ -295,6 +302,208 @@ function buildClassicPreview(d) {
     </div>`;
 }
 
+// ── EXECUTIVE template HTML (PRO) ────────────────────────────────────────────
+function buildExecutivePreview(d) {
+  const pal = THEMES[d.theme] ?? THEMES.blue;
+
+  const photoHtml = d.profilePicture
+    ? `<img src="${d.profilePicture}" class="cv-photo-classic" alt="Photo" style="margin-left:12px" />`
+    : '';
+
+  const contacts = [
+    d.email   && `✉ ${x(d.email)}`,
+    d.phone   && `☎ ${x(d.phone)}`,
+    d.address && `⌖ ${x(d.address)}`,
+  ].filter(Boolean).map(t => `<span style="margin-right:16px;font-size:9px;opacity:.85;color:${pal.text}">${t}</span>`).join('');
+
+  const skillsHtml = d.skills.length ? `
+    <div style="font-size:8px;font-weight:800;letter-spacing:.1em;color:${pal.accent};margin-bottom:6px">SKILLS</div>
+    <div style="height:2px;background:${pal.accent};margin-bottom:12px"></div>
+    ${d.skills.map(s => `
+      <div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">
+          <span>${x(s.name)}</span><span style="color:#64748b">${s.level}%</span>
+        </div>
+        <div style="height:4px;background:#d1d5db;border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${s.level}%;background:${pal.accent};border-radius:2px"></div>
+        </div>
+      </div>`).join('')}` : '';
+
+  const expHtml = d.experience.filter(j => j.jobTitle).length ? `
+    <div class="cv-exec-section-hd" style="color:${pal.accent}">WORK EXPERIENCE</div>
+    ${d.experience.filter(j => j.jobTitle).map(j => `
+      <div class="cv-job-block">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div class="cv-job-title">${x(j.jobTitle)}</div>
+          <div class="cv-job-period">${x(j.period)}</div>
+        </div>
+        <div class="cv-job-company" style="color:${pal.accent}">${x(j.company)}</div>
+        ${j.description ? `<div class="cv-job-desc">${x(j.description)}</div>` : ''}
+      </div>`).join('')}` : '';
+
+  const eduHtml = d.education.filter(e => e.degree).length ? `
+    <div class="cv-exec-section-hd" style="color:${pal.accent}">EDUCATION</div>
+    ${d.education.filter(e => e.degree).map(e => `
+      <div class="cv-edu-block">
+        <div style="display:flex;justify-content:space-between">
+          <div class="cv-edu-degree">${x(e.degree)}</div>
+          <div class="cv-edu-years">${x(e.years)}</div>
+        </div>
+        <div class="cv-edu-inst" style="color:${pal.accent}">${x(e.institution)}</div>
+      </div>`).join('')}` : '';
+
+  const summaryHtml = d.summary ? `
+    <div class="cv-exec-section-hd" style="color:${pal.accent}">PROFILE SUMMARY</div>
+    <div style="font-size:9.5px;color:#475569;line-height:1.55;margin-bottom:12px">${x(d.summary)}</div>` : '';
+
+  return `
+    <div class="cv-executive">
+      <div class="cv-exec-header" style="background:${pal.accent}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="cv-name-big" style="color:${pal.text}">${x(d.fullName)}</div>
+            <div style="margin-top:8px">${contacts}</div>
+          </div>
+          ${photoHtml}
+        </div>
+      </div>
+      <div class="cv-exec-body">
+        <div class="cv-exec-sidebar" style="background:${pal.light}">${skillsHtml}</div>
+        <div class="cv-exec-main">${summaryHtml}${expHtml}${eduHtml}</div>
+      </div>
+    </div>`;
+}
+
+// ── MINIMAL template HTML (PRO) ──────────────────────────────────────────────
+function buildMinimalPreview(d) {
+  const pal = THEMES[d.theme] ?? THEMES.blue;
+
+  const photoHtml = d.profilePicture
+    ? `<img src="${d.profilePicture}" style="width:64px;height:64px;object-fit:cover;border:2px solid ${pal.accent};margin-bottom:14px;display:block" alt="Photo" />`
+    : '';
+
+  const contacts = [d.email && `✉ ${x(d.email)}`, d.phone && `☎ ${x(d.phone)}`, d.address && `⌖ ${x(d.address)}`]
+    .filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+  const expHtml = d.experience.filter(j => j.jobTitle).length ? `
+    <div class="cv-min-section-hd" style="color:${pal.accent}">WORK EXPERIENCE</div>
+    ${d.experience.filter(j => j.jobTitle).map(j => `
+      <div class="cv-job-block">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div class="cv-job-title">${x(j.jobTitle)}</div>
+          <div class="cv-job-period">${x(j.period)}</div>
+        </div>
+        <div class="cv-job-company" style="color:${pal.accent}">${x(j.company)}</div>
+        ${j.description ? `<div class="cv-job-desc">${x(j.description)}</div>` : ''}
+      </div>`).join('')}` : '';
+
+  const eduHtml = d.education.filter(e => e.degree).length ? `
+    <div class="cv-min-section-hd" style="color:${pal.accent}">EDUCATION</div>
+    ${d.education.filter(e => e.degree).map(e => `
+      <div class="cv-edu-block">
+        <div style="display:flex;justify-content:space-between">
+          <div class="cv-edu-degree">${x(e.degree)}</div>
+          <div class="cv-edu-years">${x(e.years)}</div>
+        </div>
+        <div class="cv-edu-inst" style="color:${pal.accent}">${x(e.institution)}</div>
+      </div>`).join('')}` : '';
+
+  const skillsHtml = d.skills.length ? `
+    <div class="cv-min-section-hd" style="color:${pal.accent}">SKILLS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      ${d.skills.map(s => `
+        <span style="padding:3px 10px;border-radius:4px;font-size:9px;font-weight:600;
+          background:${pal.light};color:${pal.accent}">${x(s.name)} ${s.level}%</span>`).join('')}
+    </div>` : '';
+
+  const summaryHtml = d.summary ? `
+    <div class="cv-min-section-hd" style="color:${pal.accent}">PROFILE SUMMARY</div>
+    <div style="font-size:9.5px;color:#475569;line-height:1.55;margin-bottom:12px">${x(d.summary)}</div>` : '';
+
+  return `
+    <div class="cv-minimal">
+      <div style="border-bottom:3px solid ${pal.accent};padding-bottom:10px;margin-bottom:10px">
+        <div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2">${x(d.fullName)}</div>
+      </div>
+      ${photoHtml}
+      <div style="font-size:9px;color:#64748b;margin-bottom:16px">${contacts}</div>
+      ${summaryHtml}${expHtml}${eduHtml}${skillsHtml}
+    </div>`;
+}
+
+// ── CREATIVE template HTML (BUSINESS) ────────────────────────────────────────
+function buildCreativePreview(d) {
+  const pal    = THEMES[d.theme] ?? THEMES.blue;
+  const darkBg = '#0f172a';
+  const dimTxt = '#94a3b8';
+
+  const photoHtml = d.profilePicture
+    ? `<img src="${d.profilePicture}" style="width:72px;height:72px;object-fit:cover;border:3px solid #fff;display:block;margin:0 auto 12px" alt="Photo" />`
+    : '';
+
+  const skillsHtml = d.skills.length ? `
+    <div style="font-size:8px;font-weight:800;color:${pal.accent};margin:14px 0 5px">SKILLS</div>
+    <div style="height:1.5px;background:${pal.accent};margin-bottom:11px"></div>
+    ${d.skills.map(s => `
+      <div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">
+          <span style="color:#f1f5f9">${x(s.name)}</span>
+          <span style="color:${dimTxt}">${s.level}%</span>
+        </div>
+        <div style="height:4px;background:#1e293b;border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${s.level}%;background:${pal.accent};border-radius:2px"></div>
+        </div>
+      </div>`).join('')}` : '';
+
+  const contacts = [
+    d.email   && `<div style="margin-bottom:8px"><div style="font-size:7px;font-weight:700;color:${dimTxt};letter-spacing:.08em">EMAIL</div><div style="font-size:8.5px;color:#f1f5f9">${x(d.email)}</div></div>`,
+    d.phone   && `<div style="margin-bottom:8px"><div style="font-size:7px;font-weight:700;color:${dimTxt};letter-spacing:.08em">PHONE</div><div style="font-size:8.5px;color:#f1f5f9">${x(d.phone)}</div></div>`,
+    d.address && `<div style="margin-bottom:14px"><div style="font-size:7px;font-weight:700;color:${dimTxt};letter-spacing:.08em">LOCATION</div><div style="font-size:8.5px;color:#f1f5f9">${x(d.address)}</div></div>`,
+  ].filter(Boolean).join('');
+
+  const expHtml = d.experience.filter(j => j.jobTitle).length ? `
+    <div class="cv-creative-section-hd" style="border-left:4px solid ${pal.accent}">WORK EXPERIENCE</div>
+    ${d.experience.filter(j => j.jobTitle).map(j => `
+      <div class="cv-job-block">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div class="cv-job-title">${x(j.jobTitle)}</div>
+          <div class="cv-job-period">${x(j.period)}</div>
+        </div>
+        <div class="cv-job-company" style="color:${pal.accent}">${x(j.company)}</div>
+        ${j.description ? `<div class="cv-job-desc">${x(j.description)}</div>` : ''}
+      </div>`).join('')}` : '';
+
+  const eduHtml = d.education.filter(e => e.degree).length ? `
+    <div class="cv-creative-section-hd" style="border-left:4px solid ${pal.accent}">EDUCATION</div>
+    ${d.education.filter(e => e.degree).map(e => `
+      <div class="cv-edu-block">
+        <div style="display:flex;justify-content:space-between">
+          <div class="cv-edu-degree">${x(e.degree)}</div>
+          <div class="cv-edu-years">${x(e.years)}</div>
+        </div>
+        <div class="cv-edu-inst" style="color:${pal.accent}">${x(e.institution)}</div>
+      </div>`).join('')}` : '';
+
+  const summaryHtml = d.summary ? `
+    <div class="cv-creative-section-hd" style="border-left:4px solid ${pal.accent}">PROFILE SUMMARY</div>
+    <div style="font-size:9.5px;color:#475569;line-height:1.55;margin-bottom:12px">${x(d.summary)}</div>` : '';
+
+  return `
+    <div class="cv-creative">
+      <div class="cv-creative-sidebar" style="background:${darkBg}">
+        <div style="height:7px;background:${pal.accent}"></div>
+        <div style="padding:18px 16px">
+          ${photoHtml}
+          <div style="font-size:14px;font-weight:800;color:#f1f5f9;line-height:1.2;margin-bottom:4px">${x(d.fullName)}</div>
+          <div style="height:2px;background:${pal.accent};margin-bottom:14px"></div>
+          ${contacts}
+          ${skillsHtml}
+        </div>
+      </div>
+      <div class="cv-creative-main">${summaryHtml}${expHtml}${eduHtml}</div>
+    </div>`;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 //  DYNAMIC ENTRY BUILDERS
 // ════════════════════════════════════════════════════════════════════════════
@@ -385,11 +594,52 @@ function removeEntry(id) {
 //  TEMPLATE & THEME SELECTORS
 // ════════════════════════════════════════════════════════════════════════════
 function setupTemplateSelector() {
-  document.querySelectorAll('input[name="template"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      state.template = radio.value;
-      renderPreview();
+  document.querySelectorAll('.tpl-card').forEach(card => {
+    const requiredPlan = card.dataset.plan; // 'pro' | 'business' | undefined
+    const radio = card.querySelector('input[name="template"]');
+
+    card.addEventListener('click', e => {
+      if (!canUsePlan(requiredPlan)) {
+        e.preventDefault();
+        openPremiumModal();
+      }
     });
+
+    if (radio) {
+      radio.addEventListener('change', () => {
+        if (!canUsePlan(requiredPlan)) { radio.checked = false; return; }
+        state.template = radio.value;
+        renderPreview();
+      });
+    }
+  });
+
+  refreshTemplateUnlocks();
+}
+
+/** Returns true if user's current plan satisfies the required plan. */
+function canUsePlan(requiredPlan) {
+  if (!requiredPlan) return true;                          // free template
+  if (requiredPlan === 'pro') return state.isPremium;     // pro OR business
+  if (requiredPlan === 'business') return state.plan === 'business';
+  return false;
+}
+
+/** Enable/disable template cards based on current plan. */
+function refreshTemplateUnlocks() {
+  document.querySelectorAll('.tpl-card[data-plan]').forEach(card => {
+    const unlocked = canUsePlan(card.dataset.plan);
+    card.classList.toggle('locked', !unlocked);
+
+    const radio = card.querySelector('input[name="template"]');
+    if (radio) radio.disabled = !unlocked;
+
+    // Update badge: show lock icon only when locked
+    const badge = card.querySelector('.tpl-badge');
+    if (badge) {
+      const lockIcon = badge.querySelector('.bi-lock-fill');
+      if (lockIcon) lockIcon.style.display = unlocked ? 'none' : '';
+    }
   });
 }
 
@@ -707,6 +957,7 @@ function activatePremium(plan) {
     card.querySelector('.tpl-badge').textContent = activatedPlan === 'business' ? 'BUSINESS' : 'PRO';
   });
 
+  refreshTemplateUnlocks();
   updateCounterBadge();
   const planLabel = activatedPlan === 'business' ? 'Business' : 'Pro';
   showStatus(`🎉 ${planLabel} activated! Unlimited exports, no watermark, all templates unlocked.`, 'success');

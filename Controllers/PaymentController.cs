@@ -63,10 +63,8 @@ public class PaymentController : ControllerBase
             using var reader = new System.IO.StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
-            // Log the webhook payload (replace with proper logging in production)
             Console.WriteLine($"[PayOS Webhook] {body}");
 
-            // Parse to check status
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
 
@@ -80,7 +78,7 @@ public class PaymentController : ControllerBase
                 {
                     var orderCode = codeEl.GetInt64();
                     Console.WriteLine($"[PayOS Webhook] Order {orderCode} PAID");
-                    // In a production app with a database, you would mark the subscription as active here.
+                    // In a production app with a database, mark the subscription as active here.
                 }
             }
 
@@ -91,6 +89,39 @@ public class PaymentController : ControllerBase
             Console.WriteLine($"[PayOS Webhook] Error: {ex.Message}");
             return Ok(new { code = "00" }); // Always return 200 to acknowledge receipt
         }
+    }
+
+    /// <summary>
+    /// GET /api/payment/dev-activate?plan=pro
+    /// DEV ONLY — activates a plan without real payment (sets localStorage via HTML response).
+    /// Returns 404 in Production.
+    /// </summary>
+    [HttpGet("dev-activate")]
+    public IActionResult DevActivate([FromQuery] string plan = "pro")
+    {
+        if (!PayOSService.Plans.ContainsKey(plan))
+            return BadRequest(new { error = $"Unknown plan: {plan}. Use 'pro' or 'business'." });
+
+        var color = plan == "business" ? "#7c3aed" : "#1d4ed8";
+        var label = plan == "business" ? "BUSINESS" : "PRO";
+
+        var html = "<html><head><meta charset='UTF-8'><title>Dev Activate</title>"
+            + "<style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9}"
+            + ".card{background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center;max-width:360px}"
+            + ".badge{display:inline-block;padding:.4rem 1rem;border-radius:20px;font-weight:700;margin-bottom:1rem;"
+            + "background:" + color + ";color:#fff}</style></head>"
+            + "<body><div class='card'>"
+            + "<div class='badge'>" + label + "</div>"
+            + "<h3>&#x2705; Dev Activate</h3>"
+            + "<p>Plan <strong>" + plan + "</strong> activated.<br>Redirecting in 1s&hellip;</p>"
+            + "</div>"
+            + "<script>"
+            + "localStorage.setItem('cvbPremium_v1','1');"
+            + "localStorage.setItem('cvbPlan_v1','" + plan + "');"
+            + "setTimeout(function(){location.href='/';},1000);"
+            + "</script></body></html>";
+
+        return Content(html, "text/html");
     }
 }
 
