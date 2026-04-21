@@ -34,7 +34,7 @@ else
     var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
                ?? "Data Source=cvwebsite.db";
 
-    // Nếu connection string là SQL Server format → dùng SQL Server, còn lại dùng SQLite
+    // SQL Server (local SSMS)
     if (connStr.Contains("Server=", StringComparison.OrdinalIgnoreCase) ||
         connStr.Contains("Data Source=tcp:", StringComparison.OrdinalIgnoreCase))
     {
@@ -43,8 +43,14 @@ else
     }
     else
     {
+        // SQLite — dùng /tmp trong container (luôn writable), máy local dùng thư mục hiện tại
+        if (connStr == "Data Source=cvwebsite.db" &&
+            Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT") != null)
+        {
+            connStr = "Data Source=/tmp/cvwebsite.db";
+        }
         builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(connStr));
-        Console.WriteLine("[DB] Using SQLite (fallback)");
+        Console.WriteLine($"[DB] Using SQLite: {connStr}");
     }
 }
 
