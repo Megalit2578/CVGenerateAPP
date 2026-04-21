@@ -29,8 +29,8 @@
 
   <div id="stateSuccess" style="display:none">
     <i class="bi bi-check-circle-fill icon-ok d-block mb-3"></i>
-    <h4 class="fw-bold mb-1">Thanh toán thành công! 🎉</h4>
-    <p class="text-muted mb-4">Tài khoản <strong>Premium</strong> đã kích hoạt.<br>Xuất PDF không giới hạn, không watermark.</p>
+    <h4 class="fw-bold mb-1" id="successTitle">Thanh toán thành công! 🎉</h4>
+    <p class="text-muted mb-4" id="successDesc">Tài khoản <strong>Premium</strong> đã kích hoạt.<br>Xuất PDF không giới hạn, không watermark.</p>
     <a href="/" class="btn-home text-decoration-none d-block">Quay lại tạo CV →</a>
   </div>
 
@@ -43,28 +43,39 @@
 
 </div>
 <script>
-  // PayOS appends ?orderCode=xxx&status=PAID to the returnUrl
+  // PayOS appends ?orderCode=xxx&status=PAID to the returnUrl.
+  // IMPORTANT: We never trust the URL params directly — always verify with the backend.
   const params    = new URLSearchParams(location.search);
   const orderCode = params.get('orderCode');
-  const status    = (params.get('status') || '').toUpperCase();
+
+  // Retrieve the plan that was stored in sessionStorage before the PayOS redirect
+  const plan = sessionStorage.getItem('cvbPaymentPlan') || 'pro';
 
   async function verify() {
-    if (status === 'PAID') { markSuccess(); return; }
+    if (!orderCode) { show('stateFail'); return; }
 
-    if (orderCode) {
-      try {
-        const res  = await fetch('/api/payment/verify?orderCode=' + orderCode);
-        const data = await res.json();
-        if (data.paid) { markSuccess(); return; }
-      } catch (_) {}
-    }
+    try {
+      const res  = await fetch('/api/payment/verify?orderCode=' + encodeURIComponent(orderCode));
+      if (!res.ok) throw new Error('verify failed');
+      const data = await res.json();
+      if (data.paid) { markSuccess(plan); return; }
+    } catch (_) {}
 
     show('stateFail');
   }
 
-  function markSuccess() {
-    // Activate premium in localStorage — main app reads this on next load
+  function markSuccess(activatedPlan) {
+    // Persist plan type — main app reads this on next load
     localStorage.setItem('cvbPremium_v1', '1');
+    localStorage.setItem('cvbPlan_v1', activatedPlan);
+    sessionStorage.removeItem('cvbPaymentPlan');
+
+    // Update success message based on plan
+    const planLabel = activatedPlan === 'business' ? 'Business' : 'Pro';
+    document.getElementById('successTitle').textContent = `Kích hoạt ${planLabel} thành công! 🎉`;
+    document.getElementById('successDesc').innerHTML =
+      `Tài khoản <strong>${planLabel}</strong> đã được kích hoạt.<br>Xuất PDF không giới hạn, không watermark.`;
+
     show('stateSuccess');
   }
 

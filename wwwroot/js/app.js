@@ -14,12 +14,14 @@ const state = {
   template: 'modern',   // 'modern' | 'classic'
   theme:    'blue',     // 'blue' | 'dark' | 'purple' | 'emerald'
   isPremium: false,
+  plan:     'free',     // 'free' | 'pro' | 'business'
   profilePic: null,     // compressed base64 data-URL or null
 };
 
 // ── Monetization constants ────────────────────────────────────────────────────
 const FREE_DAILY_LIMIT = 3; // free exports per day before paywall
 const STORAGE_KEY_PREMIUM = 'cvbPremium_v1';
+const STORAGE_KEY_PLAN    = 'cvbPlan_v1';    // 'pro' | 'business'
 const STORAGE_KEY_EXPORTS = 'cvbExports_v1';
 
 // Colour palette per theme (mirrors PdfService on the backend)
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Restore premium status from localStorage (persists across sessions)
   if (localStorage.getItem(STORAGE_KEY_PREMIUM) === '1') {
     state.isPremium = true;
+    state.plan = localStorage.getItem(STORAGE_KEY_PLAN) || 'pro';
   }
 
   // ── Activate real Google AdSense if publisher ID is configured
@@ -500,7 +503,8 @@ function updateCounterBadge() {
   if (!badge) return;
 
   if (state.isPremium) {
-    badge.innerHTML = '<i class="bi bi-stars me-1"></i>Premium — Unlimited';
+    const planLabel = state.plan === 'business' ? 'Business' : 'Pro';
+    badge.innerHTML = `<i class="bi bi-stars me-1"></i>${planLabel} — Unlimited`;
     badge.className = 'counter-badge premium';
     return;
   }
@@ -671,6 +675,9 @@ async function startPayOSPayment() {
     if (!res.ok || !data.checkoutUrl)
       throw new Error(data.error ?? 'Không thể tạo đơn hàng. Vui lòng thử lại.');
 
+    // Store plan in sessionStorage so payment-success.html knows which plan to activate
+    sessionStorage.setItem('cvbPaymentPlan', _currentPlan);
+
     // Redirect to PayOS — after this, bfcache may restore the page on Back.
     // The pageshow listener above will reset the button when that happens.
     window.location.href = data.checkoutUrl;
@@ -682,10 +689,14 @@ async function startPayOSPayment() {
   }
 }
 
-function activatePremium() {
+function activatePremium(plan) {
+  const activatedPlan = plan || _currentPlan || 'pro';
   state.isPremium = true;
+  state.plan = activatedPlan;
+
   // Persist so premium survives page refresh
   localStorage.setItem(STORAGE_KEY_PREMIUM, '1');
+  localStorage.setItem(STORAGE_KEY_PLAN, activatedPlan);
 
   document.getElementById('premiumModalBackdrop').classList.remove('open');
 
@@ -693,11 +704,12 @@ function activatePremium() {
   document.querySelectorAll('.tpl-card.locked').forEach(card => {
     card.classList.remove('locked');
     card.style.opacity = '1';
-    card.querySelector('.tpl-badge').textContent = 'PRO';
+    card.querySelector('.tpl-badge').textContent = activatedPlan === 'business' ? 'BUSINESS' : 'PRO';
   });
 
   updateCounterBadge();
-  showStatus('🎉 Premium activated! Unlimited exports, no watermark, all templates unlocked.', 'success');
+  const planLabel = activatedPlan === 'business' ? 'Business' : 'Pro';
+  showStatus(`🎉 ${planLabel} activated! Unlimited exports, no watermark, all templates unlocked.`, 'success');
 }
 
 

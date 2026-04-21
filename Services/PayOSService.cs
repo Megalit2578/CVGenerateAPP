@@ -30,8 +30,8 @@ public class PayOSService
         });
     }
 
-    /// <summary>Creates a PayOS checkout URL.</summary>
-    public async Task<string> CreatePaymentLinkAsync(string plan, string returnUrl, string cancelUrl)
+    /// <summary>Creates a PayOS checkout URL. Returns (CheckoutUrl, OrderCode).</summary>
+    public async Task<(string CheckoutUrl, long OrderCode)> CreatePaymentLinkAsync(string plan, string returnUrl, string cancelUrl)
     {
         if (!Plans.TryGetValue(plan, out var info))
             throw new ArgumentException($"Unknown plan: {plan}");
@@ -49,14 +49,21 @@ public class PayOSService
         };
 
         var result = await _client.PaymentRequests.CreateAsync(request);
-        return result.CheckoutUrl;
+        return (result.CheckoutUrl, orderCode);
     }
 
     /// <summary>Returns whether an order has been paid.</summary>
     public async Task<(bool Paid, string Status)> GetPaymentStatusAsync(long orderCode)
     {
-        var info   = await _client.PaymentRequests.GetAsync(orderCode);
-        var status = info.Status.ToString();
-        return (status == "PAID", status);
+        try
+        {
+            var info   = await _client.PaymentRequests.GetAsync(orderCode);
+            var status = info.Status.ToString();
+            return (string.Equals(status, "PAID", StringComparison.OrdinalIgnoreCase), status);
+        }
+        catch
+        {
+            return (false, "ERROR");
+        }
     }
 }
