@@ -12,21 +12,8 @@
           crossorigin="anonymous"></script>
   <!-- AdSense manual slot config (fill slot IDs after creating ad units) -->
   <script src="/js/adsense-config.js"></script>
-  <!-- Popunder — chỉ hiện với Free users -->
-  <script>
-    (function(){
-      var jwt = localStorage.getItem('cvbJwt');
-      if (jwt) {
-        try {
-          var payload = JSON.parse(atob(jwt.split('.')[1]));
-          if (payload.plan === 'pro' || payload.plan === 'business') return;
-        } catch(e) {}
-      }
-      var s = document.createElement('script');
-      s.src = 'https://pl29212638.profitablecpmratenetwork.com/48/7f/17/487f17e55e24759b9ba540ef032b6e20.js';
-      document.head.appendChild(s);
-    })();
-  </script>
+  <!-- Popunder Adsterra -->
+  <script src="https://pl29212638.profitablecpmratenetwork.com/48/7f/17/487f17e55e24759b9ba540ef032b6e20.js"></script>
 </head>
 <body>
 
