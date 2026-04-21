@@ -1043,16 +1043,21 @@ function syncAuthState() {
   const upgradeBtn = document.getElementById('navUpgradeBtn');
   const emailEl    = document.getElementById('navUserEmail');
   const badgeEl    = document.getElementById('navPlanBadge');
+  const avatarEl   = document.getElementById('navAvatar');
 
   if (state.user) {
-    userArea.style.display  = '';
-    loginBtn.style.display  = 'none';
-    emailEl.textContent     = state.user.email;
+    userArea.style.display = '';
+    loginBtn.style.display = 'none';
 
+    // Set email in dropdown and avatar initial
+    emailEl.textContent  = state.user.email;
+    if (avatarEl) avatarEl.textContent = state.user.email[0].toUpperCase();
+
+    // Plan badge
     const planLabels = { pro: 'PRO', business: 'BUSINESS' };
     if (planLabels[state.plan]) {
-      badgeEl.textContent = planLabels[state.plan];
-      badgeEl.className   = `nav-plan-badge plan-${state.plan}`;
+      badgeEl.textContent   = planLabels[state.plan];
+      badgeEl.className     = `nav-plan-badge plan-${state.plan}`;
       badgeEl.style.display = '';
       if (upgradeBtn) upgradeBtn.style.display = 'none';
     } else {
@@ -1060,11 +1065,21 @@ function syncAuthState() {
       if (upgradeBtn) upgradeBtn.style.display = '';
     }
   } else {
-    userArea.style.display  = 'none';
-    loginBtn.style.display  = '';
+    userArea.style.display = 'none';
+    loginBtn.style.display = '';
     if (upgradeBtn) upgradeBtn.style.display = '';
   }
 }
+
+function toggleUserMenu() {
+  document.getElementById('navUserArea').classList.toggle('open');
+}
+
+// Close user dropdown when clicking outside
+document.addEventListener('click', e => {
+  const chip = document.getElementById('navUserArea');
+  if (chip && !chip.contains(e.target)) chip.classList.remove('open');
+});
 
 function logoutUser() {
   localStorage.removeItem(STORAGE_KEY_JWT);
@@ -1095,7 +1110,6 @@ function switchAuthTab(mode) {
   document.getElementById('authRegisterForm').style.display = isLogin ? 'none' : '';
   document.getElementById('tabLogin').classList.toggle('active', isLogin);
   document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-  document.getElementById('authModalTitle').textContent = isLogin ? 'Đăng nhập' : 'Đăng ký tài khoản';
   document.getElementById('authError').style.display = 'none';
 }
 

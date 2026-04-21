@@ -6,7 +6,7 @@
   <title>CV Builder Pro — Professional Resume Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link href="/css/style.css?v=4" rel="stylesheet" />
+  <link href="/css/style.css?v=5" rel="stylesheet" />
   <!-- ═══ GOOGLE ADSENSE — Real publisher script ═══ -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4398389720271327"
           crossorigin="anonymous"></script>
@@ -27,21 +27,29 @@
     <div class="nav-center d-none d-md-flex gap-3 align-items-center">
       <span id="exportCounter" class="counter-badge">3 exports left today</span>
     </div>
-    <div class="nav-right d-flex align-items-center gap-2">
-      <!-- Shown when logged in -->
-      <div id="navUserArea" style="display:none" class="d-flex align-items-center gap-2">
-        <span id="navUserEmail" class="nav-user-email"></span>
-        <span id="navPlanBadge" class="nav-plan-badge"></span>
-        <button class="btn-nav-outline" onclick="logoutUser()">Đăng xuất</button>
-      </div>
-      <!-- Shown when logged out -->
-      <button id="navLoginBtn" class="btn-nav-outline" onclick="openAuthModal('login')">
-        <i class="bi bi-person me-1"></i>Đăng nhập
-      </button>
+    <div class="nav-right">
       <!-- Upgrade button — hidden when already pro/business -->
       <button id="navUpgradeBtn" class="btn-premium-nav" onclick="openPremiumModal()">
         <i class="bi bi-stars me-1"></i>Nâng cấp
       </button>
+      <!-- Logged out: single login button -->
+      <button id="navLoginBtn" class="btn-nav-outline" onclick="openAuthModal('login')">
+        <i class="bi bi-person-fill me-1"></i>Đăng nhập
+      </button>
+      <!-- Logged in: avatar chip with dropdown -->
+      <div id="navUserArea" class="nav-user-chip" style="display:none" onclick="toggleUserMenu()">
+        <div class="nav-avatar" id="navAvatar">U</div>
+        <span id="navPlanBadge" class="nav-plan-badge" style="display:none"></span>
+        <i class="bi bi-chevron-down nav-chevron"></i>
+        <!-- Dropdown -->
+        <div class="nav-user-menu" id="navUserMenu">
+          <div class="num-email" id="navUserEmail"></div>
+          <div class="num-divider"></div>
+          <button class="num-item" onclick="logoutUser(); event.stopPropagation()">
+            <i class="bi bi-box-arrow-right"></i> Đăng xuất
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -455,58 +463,65 @@
      AUTH MODAL — Login / Register
 ═══════════════════════════════════════════════════════════════════ -->
 <div class="modal-backdrop" id="authModalBackdrop" onclick="closeAuthModal(event)">
-  <div class="premium-modal" id="authModal" style="max-width:420px">
-    <div class="pm-header">
-      <div>
-        <div class="pm-icon"><i class="bi bi-person-circle"></i></div>
-        <h4 class="pm-title" id="authModalTitle">Đăng nhập</h4>
-        <p class="pm-sub">Cần tài khoản để mua gói Pro / Business</p>
+  <div class="auth-modal" id="authModal">
+
+    <!-- Close button -->
+    <button class="auth-modal-close" onclick="closeAuthModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <!-- Logo / brand -->
+    <div class="auth-brand">
+      <div class="auth-brand-icon">
+        <i class="bi bi-file-earmark-person-fill"></i>
       </div>
-      <button class="pm-close" onclick="closeAuthModal()"><i class="bi bi-x-lg"></i></button>
+      <div class="auth-brand-name">CV Builder <span>Pro</span></div>
     </div>
 
     <!-- Tabs -->
-    <div class="d-flex gap-2 mb-3">
+    <div class="auth-tabs">
       <button id="tabLogin"    class="auth-tab active"  onclick="switchAuthTab('login')">Đăng nhập</button>
       <button id="tabRegister" class="auth-tab"         onclick="switchAuthTab('register')">Đăng ký</button>
     </div>
 
-    <div id="authError" class="alert alert-danger py-2 px-3 mb-2" style="display:none;font-size:.9rem"></div>
+    <div id="authError" class="auth-error" style="display:none"></div>
 
     <!-- Login form -->
     <div id="authLoginForm">
-      <div class="mb-3">
-        <label class="flabel">Email</label>
-        <input type="email" id="loginEmail" class="form-control" placeholder="email@example.com" />
+      <div class="auth-field">
+        <label class="auth-label"><i class="bi bi-envelope me-1"></i>Email</label>
+        <input type="email" id="loginEmail" class="auth-input" placeholder="email@example.com" />
       </div>
-      <div class="mb-3">
-        <label class="flabel">Mật khẩu</label>
-        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" />
+      <div class="auth-field">
+        <label class="auth-label"><i class="bi bi-lock me-1"></i>Mật khẩu</label>
+        <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" />
       </div>
-      <button class="btn-generate-action w-100" id="loginBtn" onclick="submitLogin()">
+      <button class="auth-btn" id="loginBtn" onclick="submitLogin()">
         <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
       </button>
+      <p class="auth-switch">Chưa có tài khoản? <a href="#" onclick="switchAuthTab('register');return false">Đăng ký ngay</a></p>
     </div>
 
     <!-- Register form -->
     <div id="authRegisterForm" style="display:none">
-      <div class="mb-3">
-        <label class="flabel">Email</label>
-        <input type="email" id="regEmail" class="form-control" placeholder="email@example.com" />
+      <div class="auth-field">
+        <label class="auth-label"><i class="bi bi-envelope me-1"></i>Email</label>
+        <input type="email" id="regEmail" class="auth-input" placeholder="email@example.com" />
       </div>
-      <div class="mb-3">
-        <label class="flabel">Mật khẩu <small class="text-muted">(tối thiểu 6 ký tự)</small></label>
-        <input type="password" id="regPassword" class="form-control" placeholder="••••••••" />
+      <div class="auth-field">
+        <label class="auth-label"><i class="bi bi-lock me-1"></i>Mật khẩu <span class="auth-hint">(tối thiểu 6 ký tự)</span></label>
+        <input type="password" id="regPassword" class="auth-input" placeholder="••••••••" />
       </div>
-      <button class="btn-generate-action w-100" id="registerBtn" onclick="submitRegister()">
-        <i class="bi bi-person-plus me-2"></i>Đăng ký
+      <button class="auth-btn" id="registerBtn" onclick="submitRegister()">
+        <i class="bi bi-person-plus me-2"></i>Tạo tài khoản
       </button>
+      <p class="auth-switch">Đã có tài khoản? <a href="#" onclick="switchAuthTab('login');return false">Đăng nhập</a></p>
     </div>
 
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/app.js?v=4"></script>
+<script src="/js/app.js?v=5"></script>
 </body>
 </html>
