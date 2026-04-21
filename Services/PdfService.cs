@@ -7,7 +7,7 @@ namespace CVWebsite.Services;
 
 /// <summary>
 /// Generates a professional CV PDF.
-/// Templates: Modern (free), Classic (free), Executive (pro), Minimal (pro), Creative (business).
+/// Templates: Modern (free), Classic (free), Executive (pro), Minimal (pro), Elegant (pro), Creative (pro), Sharp (business).
 /// Themes: blue, dark, purple, emerald, rose, teal, orange.
 /// </summary>
 public class PdfService
@@ -50,6 +50,8 @@ public class PdfService
                     case "executive": BuildExecutive(page, cv, pal); break;
                     case "minimal":   BuildMinimal(page, cv, pal);   break;
                     case "creative":  BuildCreative(page, cv, pal);  break;
+                    case "elegant":   BuildElegant(page, cv, pal);   break;
+                    case "sharp":     BuildSharp(page, cv, pal);     break;
                     default:          BuildModern(page, cv, pal);    break;
                 }
 
@@ -621,6 +623,221 @@ public class PdfService
                         });
                     }
                 }
+            });
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  ELEGANT TEMPLATE  –  accent header + light sidebar left  [PRO]
+    // ══════════════════════════════════════════════════════════════════════════
+    private void BuildElegant(PageDescriptor page, CvModel cv, ThemePalette pal)
+    {
+        page.Content().Column(root =>
+        {
+            // Header bar
+            root.Item().Background(pal.Accent).Padding(18).Column(hdr =>
+            {
+                hdr.Item().Text(cv.FullName).Bold().FontSize(22).FontColor(pal.SideText);
+                hdr.Item().PaddingTop(5).Height(2).Background(Dim(pal.SideText));
+            });
+
+            // Body
+            root.Item().Extend().Row(body =>
+            {
+                // Left sidebar — light bg, contact + skills as pills + education
+                body.ConstantItem(180).Background(pal.AccentLight).Padding(13).Column(sb =>
+                {
+                    TryRenderPhoto(sb, cv.ProfilePicture, 75, false);
+
+                    if (!string.IsNullOrWhiteSpace(cv.Email))
+                        ElegantContact(sb, "EMAIL", cv.Email);
+                    if (!string.IsNullOrWhiteSpace(cv.Phone))
+                        ElegantContact(sb, "PHONE", cv.Phone);
+                    if (!string.IsNullOrWhiteSpace(cv.Address))
+                        ElegantContact(sb, "LOCATION", cv.Address);
+
+                    if (cv.Skills.Any(s => !string.IsNullOrWhiteSpace(s.Name)))
+                    {
+                        sb.Item().PaddingTop(12).Text("SKILLS").Bold().FontSize(7.5f).FontColor("#64748b");
+                        sb.Item().PaddingTop(5).PaddingBottom(6);
+                        sb.Item().Wrap().Row(pills =>
+                        {
+                            foreach (var skill in cv.Skills.Where(s => !string.IsNullOrWhiteSpace(s.Name)))
+                            {
+                                pills.AutoItem().PaddingRight(4).PaddingBottom(4)
+                                     .Background(pal.Accent).Padding(2, 7)
+                                     .Text(skill.Name).FontSize(7.5f).Bold().FontColor(pal.SideText);
+                            }
+                        });
+                    }
+
+                    if (cv.Education.Any(e => !string.IsNullOrWhiteSpace(e.Degree)))
+                    {
+                        sb.Item().PaddingTop(14).Text("EDUCATION").Bold().FontSize(7.5f).FontColor("#64748b");
+                        sb.Item().PaddingTop(3).PaddingBottom(8);
+                        foreach (var edu in cv.Education.Where(e => !string.IsNullOrWhiteSpace(e.Degree)))
+                        {
+                            sb.Item().PaddingBottom(9).Column(e =>
+                            {
+                                e.Item().Text(edu.Degree).Bold().FontSize(8.5f).FontColor("#1e293b");
+                                e.Item().Text(edu.Institution).FontSize(8).FontColor(pal.Accent);
+                                e.Item().Text(edu.Years).FontSize(7.5f).FontColor("#94a3b8");
+                            });
+                        }
+                    }
+                });
+
+                // Main content
+                body.RelativeItem().Background("#ffffff").Padding(16).Column(mc =>
+                {
+                    if (!string.IsNullOrWhiteSpace(cv.Summary))
+                    {
+                        mc.Item().Text("HỒ SƠ").Bold().FontSize(7.5f).FontColor(pal.Accent);
+                        mc.Item().PaddingTop(4).PaddingBottom(12)
+                           .Background(pal.AccentLight).Padding(9)
+                           .Text(cv.Summary).FontSize(9).FontColor("#475569").LineHeight(1.55f);
+                    }
+
+                    if (cv.Experience.Any(j => !string.IsNullOrWhiteSpace(j.JobTitle)))
+                    {
+                        mc.Item().Text("KINH NGHIỆM LÀM VIỆC").Bold().FontSize(7.5f).FontColor(pal.Accent);
+                        mc.Item().PaddingTop(3).PaddingBottom(8);
+                        foreach (var job in cv.Experience.Where(j => !string.IsNullOrWhiteSpace(j.JobTitle)))
+                        {
+                            mc.Item().PaddingBottom(10).BorderLeft(2).BorderColor(pal.AccentLight)
+                               .PaddingLeft(10).Column(j =>
+                            {
+                                j.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text(job.JobTitle).Bold().FontSize(9.5f).FontColor("#1e293b");
+                                    r.ConstantItem(75).AlignRight().Text(job.Period).FontSize(7.5f).FontColor("#94a3b8");
+                                });
+                                j.Item().Text(job.Company).Bold().FontSize(8.5f).FontColor(pal.Accent);
+                                if (!string.IsNullOrWhiteSpace(job.Description))
+                                    j.Item().PaddingTop(2).Text(job.Description).FontSize(8.5f).FontColor("#475569").LineHeight(1.4f);
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    private static void ElegantContact(ColumnDescriptor col, string label, string value)
+    {
+        col.Item().PaddingBottom(7).Column(c =>
+        {
+            c.Item().Text(label).FontSize(7).Bold().FontColor("#94a3b8");
+            c.Item().Text(value).FontSize(8).FontColor("#334155");
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  SHARP TEMPLATE  –  dark header + two-col timeline experience  [BUSINESS]
+    // ══════════════════════════════════════════════════════════════════════════
+    private void BuildSharp(PageDescriptor page, CvModel cv, ThemePalette pal)
+    {
+        page.Content().Column(root =>
+        {
+            // Dark header
+            root.Item().Background("#0f172a").Padding(18).Row(hdr =>
+            {
+                hdr.RelativeItem().Column(col =>
+                {
+                    col.Item().Text(cv.FullName).Bold().FontSize(22).FontColor("#f1f5f9");
+                    col.Item().PaddingTop(6).Height(2).Width(50).Background(pal.Accent);
+                    var contacts = new[] { cv.Email, cv.Phone, cv.Address }
+                        .Where(c => !string.IsNullOrWhiteSpace(c));
+                    if (contacts.Any())
+                        col.Item().PaddingTop(7).Text(string.Join("   ", contacts))
+                           .FontSize(8).FontColor("#94a3b8");
+                });
+                TryRenderPhotoInline(hdr, cv.ProfilePicture, 58);
+            });
+
+            // Body
+            root.Item().Extend().Row(body =>
+            {
+                // Left — skills + education
+                body.ConstantItem(175).Background("#ffffff").BorderRight(1).BorderColor("#f1f5f9").Padding(13).Column(sb =>
+                {
+                    if (cv.Skills.Any(s => !string.IsNullOrWhiteSpace(s.Name)))
+                    {
+                        sb.Item().Text("SKILLS").Bold().FontSize(7.5f).FontColor("#94a3b8");
+                        sb.Item().PaddingTop(6).PaddingBottom(2);
+                        foreach (var skill in cv.Skills.Where(s => !string.IsNullOrWhiteSpace(s.Name)))
+                        {
+                            sb.Item().PaddingBottom(9).Column(s =>
+                            {
+                                s.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text(skill.Name).Bold().FontSize(8).FontColor("#1e293b");
+                                    r.ConstantItem(28).AlignRight()
+                                     .Text($"{skill.Level}%").FontSize(7.5f).FontColor(pal.Accent);
+                                });
+                                var fill = Math.Clamp(skill.Level, 0, 100);
+                                s.Item().PaddingTop(3).Height(3).Row(bar =>
+                                {
+                                    if (fill > 0) bar.RelativeItem(fill).Background(pal.Accent);
+                                    if (fill < 100) bar.RelativeItem(100 - fill).Background("#f1f5f9");
+                                });
+                            });
+                        }
+                    }
+
+                    if (cv.Education.Any(e => !string.IsNullOrWhiteSpace(e.Degree)))
+                    {
+                        sb.Item().PaddingTop(16).Text("EDUCATION").Bold().FontSize(7.5f).FontColor("#94a3b8");
+                        sb.Item().PaddingTop(6).PaddingBottom(2);
+                        foreach (var edu in cv.Education.Where(e => !string.IsNullOrWhiteSpace(e.Degree)))
+                        {
+                            sb.Item().PaddingBottom(9).Padding(8).Background("#f8fafc").Column(e =>
+                            {
+                                e.Item().Text(edu.Degree).Bold().FontSize(8.5f).FontColor("#1e293b");
+                                e.Item().Text(edu.Institution).FontSize(8).FontColor(pal.Accent);
+                                e.Item().Text(edu.Years).FontSize(7.5f).FontColor("#94a3b8");
+                            });
+                        }
+                    }
+                });
+
+                // Right — summary + experience timeline
+                body.RelativeItem().Background("#ffffff").Padding(16).Column(mc =>
+                {
+                    if (!string.IsNullOrWhiteSpace(cv.Summary))
+                    {
+                        mc.Item().Text("ABOUT ME").Bold().FontSize(7.5f).FontColor("#94a3b8");
+                        mc.Item().PaddingTop(4).PaddingBottom(14)
+                           .BorderLeft(3).BorderColor(pal.Accent)
+                           .Background("#f8fafc").Padding(9)
+                           .Text(cv.Summary).FontSize(8.5f).FontColor("#475569").LineHeight(1.6f);
+                    }
+
+                    if (cv.Experience.Any(j => !string.IsNullOrWhiteSpace(j.JobTitle)))
+                    {
+                        mc.Item().PaddingBottom(8).Text("WORK EXPERIENCE").Bold().FontSize(7.5f).FontColor("#94a3b8");
+                        foreach (var job in cv.Experience.Where(j => !string.IsNullOrWhiteSpace(j.JobTitle)))
+                        {
+                            mc.Item().PaddingBottom(12).Row(jrow =>
+                            {
+                                // Dot
+                                jrow.ConstantItem(16).PaddingTop(4)
+                                    .Width(9).Height(9).Background(pal.Accent);
+                                jrow.RelativeItem().Column(j =>
+                                {
+                                    j.Item().Row(r =>
+                                    {
+                                        r.RelativeItem().Text(job.JobTitle).Bold().FontSize(9.5f).FontColor("#1e293b");
+                                        r.ConstantItem(70).AlignRight().Text(job.Period).FontSize(7.5f).FontColor("#94a3b8");
+                                    });
+                                    j.Item().Text(job.Company).Bold().FontSize(8.5f).FontColor(pal.Accent);
+                                    if (!string.IsNullOrWhiteSpace(job.Description))
+                                        j.Item().PaddingTop(2).Text(job.Description).FontSize(8.5f).FontColor("#64748b").LineHeight(1.45f);
+                                });
+                            });
+                        }
+                    }
+                });
             });
         });
     }

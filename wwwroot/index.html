@@ -6,7 +6,7 @@
   <title>CV Builder Pro — Professional Resume Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link href="/css/style.css?v=5" rel="stylesheet" />
+  <link href="/css/style.css?v=6" rel="stylesheet" />
   <!-- ═══ GOOGLE ADSENSE — Real publisher script ═══ -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4398389720271327"
           crossorigin="anonymous"></script>
@@ -259,8 +259,23 @@
               <div class="tpl-badge pro"><i class="bi bi-lock-fill me-1"></i>PRO</div>
             </label>
 
-            <!-- BUSINESS -->
-            <label class="tpl-card locked" data-plan="business" data-template="creative">
+            <!-- PRO (continued) -->
+            <label class="tpl-card locked" data-plan="pro" data-template="elegant">
+              <input type="radio" name="template" value="elegant" hidden disabled />
+              <div class="tpl-thumb elegant-thumb">
+                <div class="t-elegant-header"></div>
+                <div class="t-elegant-body">
+                  <div class="t-elegant-left"></div>
+                  <div class="t-elegant-right">
+                    <div class="t-line long"></div><div class="t-line med"></div><div class="t-line short"></div>
+                  </div>
+                </div>
+              </div>
+              <span>Elegant</span>
+              <div class="tpl-badge pro"><i class="bi bi-lock-fill me-1"></i>PRO</div>
+            </label>
+
+            <label class="tpl-card locked" data-plan="pro" data-template="creative">
               <input type="radio" name="template" value="creative" hidden disabled />
               <div class="tpl-thumb creative-thumb">
                 <div class="t-creative-sidebar">
@@ -276,6 +291,22 @@
                 </div>
               </div>
               <span>Creative</span>
+              <div class="tpl-badge pro"><i class="bi bi-lock-fill me-1"></i>PRO</div>
+            </label>
+
+            <!-- BUSINESS -->
+            <label class="tpl-card locked" data-plan="business" data-template="sharp">
+              <input type="radio" name="template" value="sharp" hidden disabled />
+              <div class="tpl-thumb sharp-thumb">
+                <div class="t-sharp-header"></div>
+                <div class="t-sharp-body">
+                  <div class="t-sharp-left"></div>
+                  <div class="t-sharp-right">
+                    <div class="t-line long"></div><div class="t-line med"></div><div class="t-line short"></div>
+                  </div>
+                </div>
+              </div>
+              <span>Sharp</span>
               <div class="tpl-badge biz"><i class="bi bi-lock-fill me-1"></i>BUSINESS</div>
             </label>
 
@@ -391,9 +422,9 @@
           <div class="plan-name">Pro</div>
           <div class="plan-price">29.000₫<span>/lần</span></div>
           <ul class="plan-features">
-            <li><i class="bi bi-check2 text-success"></i>Tất cả 6 mẫu CV</li>
+            <li><i class="bi bi-check2 text-success"></i>Tất cả 6 mẫu CV đẹp</li>
             <li><i class="bi bi-check2 text-success"></i>Xuất PDF không giới hạn</li>
-            <li><i class="bi bi-check2 text-success"></i>Mẫu Executive</li>
+            <li><i class="bi bi-check2 text-success"></i>Mẫu Executive, Elegant, Creative</li>
             <li><i class="bi bi-check2 text-success"></i>Không quảng cáo</li>
           </ul>
           <button class="plan-btn" onclick="showPaymentForm('pro', '29.000₫')">Mua Pro</button>
@@ -403,7 +434,7 @@
           <div class="plan-name">Business</div>
           <div class="plan-price">99.000₫<span>/lần</span></div>
           <ul class="plan-features">
-            <li><i class="bi bi-check2 text-success"></i>Tất cả tính năng Pro</li>
+            <li><i class="bi bi-check2 text-success"></i>Tất cả 6 mẫu Pro + mẫu Sharp</li>
             <li><i class="bi bi-check2 text-success"></i>5 tài khoản nhóm</li>
             <li><i class="bi bi-check2 text-success"></i>Hỗ trợ ưu tiên</li>
             <li><i class="bi bi-check2 text-success"></i>Thương hiệu tuỳ chỉnh</li>
@@ -522,6 +553,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/app.js?v=5"></script>
+<script src="/js/app.js?v=6"></script>
 </body>
 </html>

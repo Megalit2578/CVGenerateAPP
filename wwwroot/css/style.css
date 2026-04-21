@@ -844,6 +844,20 @@ textarea.form-control { resize: vertical; min-height: 76px; }
 .t-min-name-bar { height: 4px; background: #1d4ed8; }
 .t-min-body     { flex: 1; background: #fff; padding: 8px 6px; display: flex; flex-direction: column; gap: 5px; }
 
+/* Elegant thumb — accent header + light-sidebar + white main */
+.elegant-thumb { flex-direction: column; }
+.t-elegant-header { height: 26%; background: #1d4ed8; }
+.t-elegant-body   { flex: 1; display: flex; }
+.t-elegant-left   { width: 36%; background: #f8fafc; border-right: 1px solid #e2e8f0; }
+.t-elegant-right  { flex: 1; background: #fff; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+
+/* Sharp thumb — dark header + two white columns */
+.sharp-thumb { flex-direction: column; }
+.t-sharp-header { height: 28%; background: #0f172a; }
+.t-sharp-body   { flex: 1; display: flex; }
+.t-sharp-left   { width: 36%; background: #fff; border-right: 1px solid #f1f5f9; }
+.t-sharp-right  { flex: 1; background: #fff; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+
 /* Creative thumb — dark sidebar + white main */
 .creative-thumb { flex-direction: row; }
 .t-creative-sidebar {
@@ -1115,6 +1129,26 @@ textarea.form-control { resize: vertical; min-height: 76px; }
   text-transform: uppercase;
   padding-left: 10px;
   margin: 12px 0 8px;
+}
+
+/* -- ELEGANT template preview ---------------------------------- */
+.cv-elegant {
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  font-size: 11px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* -- SHARP template preview ------------------------------------ */
+.cv-sharp {
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  font-size: 11px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  line-height: 1.5;
 }
 
 /* ═══════════════════════════════════════════════════════════════

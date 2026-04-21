@@ -149,6 +149,8 @@ function renderPreview() {
     executive: buildExecutivePreview,
     minimal:   buildMinimalPreview,
     creative:  buildCreativePreview,
+    elegant:   buildElegantPreview,
+    sharp:     buildSharpPreview,
   };
   const fn = builders[data.template] ?? buildModernPreview;
   box.innerHTML = fn(data);
@@ -500,6 +502,148 @@ function buildCreativePreview(d) {
         </div>
       </div>
       <div class="cv-creative-main">${summaryHtml}${expHtml}${eduHtml}</div>
+    </div>`;
+}
+
+// ── ELEGANT template HTML (PRO) ──────────────────────────────────────────────
+function buildElegantPreview(d) {
+  const pal = THEMES[d.theme] ?? THEMES.blue;
+
+  const photoHtml = d.profilePicture
+    ? `<img src="${d.profilePicture}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:2px solid ${pal.accent};margin-bottom:10px;display:block" alt="Photo" />`
+    : '';
+
+  const contacts = [
+    d.email   && `<div style="margin-bottom:6px"><div style="font-size:7px;font-weight:700;color:#94a3b8;letter-spacing:.08em">EMAIL</div><div style="font-size:8px;color:#334155">${x(d.email)}</div></div>`,
+    d.phone   && `<div style="margin-bottom:6px"><div style="font-size:7px;font-weight:700;color:#94a3b8;letter-spacing:.08em">PHONE</div><div style="font-size:8px;color:#334155">${x(d.phone)}</div></div>`,
+    d.address && `<div style="margin-bottom:6px"><div style="font-size:7px;font-weight:700;color:#94a3b8;letter-spacing:.08em">LOCATION</div><div style="font-size:8px;color:#334155">${x(d.address)}</div></div>`,
+  ].filter(Boolean).join('');
+
+  const skillsHtml = d.skills.length ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#64748b;margin:12px 0 6px">SKILLS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">
+      ${d.skills.map(s => `<span style="padding:2px 7px;background:${pal.accent};color:#fff;border-radius:30px;font-size:7.5px;font-weight:600">${x(s.name)}</span>`).join('')}
+    </div>` : '';
+
+  const eduHtml = d.education.filter(e => e.degree).length ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#64748b;margin:12px 0 6px">EDUCATION</div>
+    ${d.education.filter(e => e.degree).map(e => `
+      <div style="margin-bottom:8px">
+        <div style="font-size:8.5px;font-weight:700;color:#1e293b">${x(e.degree)}</div>
+        <div style="font-size:8px;color:${pal.accent}">${x(e.institution)}</div>
+        <div style="font-size:7.5px;color:#94a3b8">${x(e.years)}</div>
+      </div>`).join('')}` : '';
+
+  const expHtml = d.experience.filter(j => j.jobTitle).length ? `
+    <div style="font-size:7.5px;font-weight:800;letter-spacing:.1em;color:${pal.accent};margin-bottom:6px">KINH NGHIỆM LÀM VIỆC</div>
+    ${d.experience.filter(j => j.jobTitle).map(j => `
+      <div style="margin-bottom:11px;padding-left:10px;border-left:2px solid ${pal.light}">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:9.5px;font-weight:700;color:#1e293b">${x(j.jobTitle)}</div>
+          <div style="font-size:7.5px;color:#94a3b8">${x(j.period)}</div>
+        </div>
+        <div style="font-size:8.5px;color:${pal.accent};font-weight:600">${x(j.company)}</div>
+        ${j.description ? `<div style="font-size:8px;color:#64748b;margin-top:2px;line-height:1.5">${x(j.description)}</div>` : ''}
+      </div>`).join('')}` : '';
+
+  const summaryHtml = d.summary ? `
+    <div style="font-size:7.5px;font-weight:800;letter-spacing:.1em;color:${pal.accent};margin-bottom:6px">HỒ SƠ</div>
+    <div style="font-size:8.5px;color:#64748b;line-height:1.55;background:${pal.light};border-radius:6px;padding:8px;margin-bottom:12px">${x(d.summary)}</div>` : '';
+
+  return `
+    <div class="cv-elegant">
+      <div style="background:${pal.accent};padding:14px 18px;display:flex;align-items:center;gap:14px">
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1">${x(d.fullName)}</div>
+          <div style="width:40px;height:2px;background:rgba(255,255,255,.5);margin:6px 0"></div>
+        </div>
+      </div>
+      <div style="display:flex;flex:1;min-height:0">
+        <div style="width:36%;background:#f8fafc;padding:12px 12px;border-right:1px solid #e2e8f0">
+          ${photoHtml}${contacts}${skillsHtml}${eduHtml}
+        </div>
+        <div style="flex:1;padding:12px 14px;background:#fff">
+          ${summaryHtml}${expHtml}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SHARP template HTML (BUSINESS) ────────────────────────────────────────────
+function buildSharpPreview(d) {
+  const pal = THEMES[d.theme] ?? THEMES.blue;
+
+  const photoHtml = d.profilePicture
+    ? `<img src="${d.profilePicture}" style="width:58px;height:58px;object-fit:cover;border-radius:50%;border:3px solid ${pal.accent};flex-shrink:0" alt="Photo" />`
+    : '';
+
+  const contacts = [
+    d.email   && `<span style="font-size:8px;color:#94a3b8;margin-right:12px">✉ ${x(d.email)}</span>`,
+    d.phone   && `<span style="font-size:8px;color:#94a3b8;margin-right:12px">☎ ${x(d.phone)}</span>`,
+    d.address && `<span style="font-size:8px;color:#94a3b8">⌖ ${x(d.address)}</span>`,
+  ].filter(Boolean).join('');
+
+  const skillsHtml = d.skills.length ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#94a3b8;margin-bottom:8px">SKILLS</div>
+    ${d.skills.map(s => `
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:8px;margin-bottom:2px">
+          <span style="font-weight:600;color:#1e293b">${x(s.name)}</span>
+          <span style="color:${pal.accent};font-weight:700">${s.level}%</span>
+        </div>
+        <div style="height:3px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${s.level}%;background:${pal.accent};border-radius:4px"></div>
+        </div>
+      </div>`).join('')}` : '';
+
+  const eduHtml = d.education.filter(e => e.degree).length ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#94a3b8;margin:12px 0 8px">EDUCATION</div>
+    ${d.education.filter(e => e.degree).map(e => `
+      <div style="margin-bottom:8px;background:#f8fafc;border-radius:6px;padding:7px">
+        <div style="font-size:8.5px;font-weight:700;color:#1e293b">${x(e.degree)}</div>
+        <div style="font-size:8px;color:${pal.accent}">${x(e.institution)}</div>
+        <div style="font-size:7.5px;color:#94a3b8">${x(e.years)}</div>
+      </div>`).join('')}` : '';
+
+  const expHtml = d.experience.filter(j => j.jobTitle).length ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#94a3b8;margin-bottom:10px">WORK EXPERIENCE</div>
+    ${d.experience.filter(j => j.jobTitle).map(j => `
+      <div style="margin-bottom:12px;display:flex;gap:10px">
+        <div style="flex-shrink:0;margin-top:4px">
+          <div style="width:9px;height:9px;border-radius:50%;background:${pal.accent};box-shadow:0 0 0 3px ${pal.light}"></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <div style="font-size:9.5px;font-weight:700;color:#1e293b">${x(j.jobTitle)}</div>
+            <div style="font-size:7.5px;color:#94a3b8">${x(j.period)}</div>
+          </div>
+          <div style="font-size:8.5px;color:${pal.accent};font-weight:600">${x(j.company)}</div>
+          ${j.description ? `<div style="font-size:8px;color:#64748b;margin-top:2px;line-height:1.5">${x(j.description)}</div>` : ''}
+        </div>
+      </div>`).join('')}` : '';
+
+  const summaryHtml = d.summary ? `
+    <div style="font-size:7px;font-weight:800;letter-spacing:.1em;color:#94a3b8;margin-bottom:8px">ABOUT ME</div>
+    <div style="font-size:8.5px;color:#475569;line-height:1.6;border-left:3px solid ${pal.accent};background:#f8fafc;border-radius:0 6px 6px 0;padding:9px 10px;margin-bottom:14px">${x(d.summary)}</div>` : '';
+
+  return `
+    <div class="cv-sharp">
+      <div style="background:#0f172a;padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:21px;font-weight:900;color:#f1f5f9;letter-spacing:-1px;line-height:1.1">${x(d.fullName)}</div>
+          <div style="height:2px;width:50px;background:${pal.accent};margin:6px 0 8px"></div>
+          <div>${contacts}</div>
+        </div>
+        ${photoHtml}
+      </div>
+      <div style="display:flex;flex:1;min-height:0">
+        <div style="width:36%;padding:12px 12px;background:#fff;border-right:1px solid #f1f5f9">
+          ${skillsHtml}${eduHtml}
+        </div>
+        <div style="flex:1;padding:12px 14px;background:#fff">
+          ${summaryHtml}${expHtml}
+        </div>
+      </div>
     </div>`;
 }
 
