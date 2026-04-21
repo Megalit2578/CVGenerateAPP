@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,13 +15,15 @@ namespace CVWebsite.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Email = table.Column<string>(type: "TEXT", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
-                    Plan = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PlanActivatedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+                        .Annotation("Npgsql:ValueGenerationStrategy",
+                            Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Email           = table.Column<string>(maxLength: 256, nullable: false),
+                    PasswordHash    = table.Column<string>(maxLength: 100, nullable: false),
+                    Plan            = table.Column<string>(maxLength: 20,  nullable: false),
+                    CreatedAt       = table.Column<DateTime>(nullable: false),
+                    PlanActivatedAt = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -32,13 +34,15 @@ namespace CVWebsite.Migrations
                 name: "PendingPayments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    OrderCode = table.Column<long>(type: "INTEGER", nullable: false),
-                    UserId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Plan = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Fulfilled = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id        = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+                        .Annotation("Npgsql:ValueGenerationStrategy",
+                            Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    OrderCode = table.Column<long>(nullable: false),
+                    UserId    = table.Column<int>(nullable: true),
+                    Plan      = table.Column<string>(maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    Fulfilled = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,11 +75,8 @@ namespace CVWebsite.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "PendingPayments");
-
-            migrationBuilder.DropTable(
-                name: "Users");
+            migrationBuilder.DropTable(name: "PendingPayments");
+            migrationBuilder.DropTable(name: "Users");
         }
     }
 }
