@@ -85,10 +85,43 @@ var app = builder.Build();
 _ = Task.Run(async () =>
 {
     await Task.Delay(500); // let the host fully start first
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-    Console.WriteLine("[DB] Migration complete.");
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        Console.WriteLine("[DB] Migration complete.");
+
+        // PostgreSQL: fix DateTime columns created as 'text' by SQLite migration
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+        {
+            await db.Database.ExecuteSqlRawAsync("""
+                DO $$ BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Users'
+                          AND column_name  = 'CreatedAt'
+                          AND data_type    = 'text'
+                    ) THEN
+                        ALTER TABLE "Users"
+                            ALTER COLUMN "CreatedAt"       TYPE timestamp with time zone
+                                USING "CreatedAt"::timestamp with time zone,
+                            ALTER COLUMN "PlanActivatedAt" TYPE timestamp with time zone
+                                USING "PlanActivatedAt"::timestamp with time zone;
+                        ALTER TABLE "PendingPayments"
+                            ALTER COLUMN "CreatedAt" TYPE timestamp with time zone
+                                USING "CreatedAt"::timestamp with time zone;
+                        RAISE NOTICE 'Fixed DateTime columns from text to timestamptz';
+                    END IF;
+                END $$;
+                """);
+            Console.WriteLine("[DB] Column type check done.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[DB ERROR] {ex.GetType().Name}: {ex.Message}");
+    }
 });
 
 // ── Static files (no browser cache) ─────────────────────────────────────────
