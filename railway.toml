@@ -4,6 +4,4 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "dotnet CVWebsite.dll"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
 restartPolicyType = "on_failure"
