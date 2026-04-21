@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e2b96f"/>
+      <stop offset="100%" style="stop-color:#c9973a"/>
+    </linearGradient>
+    <linearGradient id="doc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Document shape -->
+  <rect x="13" y="8" width="30" height="38" rx="3" fill="url(#doc)" stroke="rgba(226,185,111,0.3)" stroke-width="1"/>
+
+  <!-- Folded corner -->
+  <path d="M35 8 L43 16 L35 16 Z" fill="rgba(226,185,111,0.2)"/>
+  <path d="M35 8 L43 16 L35 16" fill="none" stroke="rgba(226,185,111,0.4)" stroke-width="0.8"/>
+
+  <!-- Lines on document -->
+  <rect x="17" y="21" width="18" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="17" y="26" width="14" height="1.5" rx="0.75" fill="rgba(255,255,255,0.18)"/>
+  <rect x="17" y="30" width="16" height="1.5" rx="0.75" fill="rgba(255,255,255,0.18)"/>
+  <rect x="17" y="34" width="12" height="1.5" rx="0.75" fill="rgba(255,255,255,0.18)"/>
+
+  <!-- Gold "CV" badge -->
+  <circle cx="46" cy="46" r="13" fill="url(#accent)"/>
+  <text x="46" y="51" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold" fill="#1a1a2e" letter-spacing="0.5">CV</text>
+</svg>
